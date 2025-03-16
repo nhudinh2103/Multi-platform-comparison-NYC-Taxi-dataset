@@ -18,6 +18,10 @@ This repository includes several tweaks and enhancements compared to the origina
 
 Switched from Spark to Databricks SQL Cloud Datawarehouse for transformations due to significant performance improvements over the original workshop's slower Spark-based approach
 
+### 📊 Expanded Data Range for Better Benchmarking
+
+Extended data processing from the original 2016-2017 range to include all NYC taxi data from 2009-2017, creating a massive 1-billion-record dataset for more comprehensive analysis and performance testing
+
 ### Additional Enhancements
 
 - Added utilities for converting between Databricks and Jupyter notebook formats
@@ -144,11 +148,46 @@ This project includes utilities to synchronize notebooks and SQL files from your
   ./sync_sql.sh Workspace/CarsProject/sql/transform /Users/me/sql/transform
   ```
 
+## Dataset Statistics
+
+The project processes a massive volume of NYC Taxi data:
+
+### Trip Data
+
+| Dataset | Time Period | Records | Raw CSV Size | Compressed Size (Delta) | Compression Ratio | Partitioning |
+|:-------:|:-----------:|:-------:|:------------:|:-----------------------:|:-----------------:|:------------:|
+| **Yellow Taxi Trips** | 2009-2017 | **1.37B** | ~300GB | ~120GB | **2.5:1** | Year, Month |
+| **Green Taxi Trips** | 2013-2017 | **59M** | ~15GB | ~6GB | **2.5:1** | Year, Month |
+
+### Reference Data
+
+| Dataset | Records | Format | Description |
+|:-------:|:-------:|:------:|:------------|
+| **Taxi Zone Lookup** | 265 | Parquet | Geographic zones for pickup/dropoff locations |
+| **Vendor Lookup** | 3 | Parquet | Taxi service providers |
+| **Payment Type Lookup** | 6 | Parquet | Methods of payment (cash, credit card, etc.) |
+| **Rate Code Lookup** | 6 | Parquet | Different rate categories |
+| **Trip Type Lookup** | 3 | Parquet | Types of trips (street-hail, dispatch, etc.) |
+
+### Data Growth by Year
+
+| Year | Yellow Taxi Records | Green Taxi Records | Total Records |
+|:----:|:-------------------:|:------------------:|:-------------:|
+| 2009 | ~170M | - | ~170M |
+| 2010 | ~168M | - | ~168M |
+| 2011 | ~176M | - | ~176M |
+| 2012 | ~179M | - | ~179M |
+| 2013 | ~173M | ~6M | ~179M |
+| 2014 | ~165M | ~13M | ~178M |
+| 2015 | ~146M | ~16M | ~162M |
+| 2016 | ~131M | ~14M | ~145M |
+| 2017 | ~62M | ~10M | ~72M |
+| **Total** | **~1.37B** | **~59M** | **~1.43B** |
+
 ## Results and Benchmarks
 
-The project successfully processes and analyzes NYC Taxi data with the following performance metrics:
+The project successfully processes and analyzes this data with the following performance metrics:
 
-- Processes over 1 billion taxi trips from 2009-2017
 - Optimized Delta Lake tables with partitioning by year and month
 - Query performance improvements:
   - 10-50x faster queries compared to raw CSV data
