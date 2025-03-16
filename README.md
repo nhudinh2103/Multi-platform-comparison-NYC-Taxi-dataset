@@ -2,6 +2,29 @@
 
 A comprehensive data engineering solution for processing, analyzing, and visualizing New York City taxi trip data using Databricks, Delta Lake, and Azure Data Services. This project is inspired by [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop).
 
+This project provides an end-to-end solution for processing and analyzing NYC Taxi trip data (Yellow and Green taxis). It demonstrates a modern data engineering approach using Databricks for data processing, Delta Lake for reliable data storage, and Azure Data Services for cloud infrastructure.
+
+Key features:
+- Data ingestion from CSV source with varying schemas
+- Schema homogenization and data transformation
+- Delta Lake format with partitioning
+- Comprehensive data analysis and reporting capabilities
+
+## Modifications from Original Workshop
+
+This repository includes several tweaks and enhancements compared to the original Azure-Databricks-NYC-Taxi-Workshop:
+
+### 🚀 Replaced Spark with SQL Cloud Datawarehouse
+
+Switched from Spark to Databricks SQL Cloud Datawarehouse for transformations due to significant performance improvements over the original workshop's slower Spark-based approach
+
+### Additional Enhancements
+
+- Added utilities for converting between Databricks and Jupyter notebook formats
+- Implemented synchronization scripts for notebooks and SQL files
+- Enhanced schema handling for different taxi data versions
+- Added support for local development with VSCode
+
 ## Architecture
 
 ### High-Level Architecture
@@ -64,16 +87,6 @@ The data flows through our system in the following pattern:
 | **Bronze** | CSV | Raw data storage | yellow_taxi_trips_raw, green_taxi_trips_raw |
 | **Silver** | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta) |
 | **Gold** | Delta Lake | Analytics-ready data | yellow_taxi_trips_transform, green_taxi_trips_transform |
-
-## Description
-
-This project provides an end-to-end solution for processing and analyzing NYC Taxi trip data (Yellow and Green taxis). It demonstrates a modern data engineering approach using Databricks for data processing, Delta Lake for reliable data storage, and Azure Data Services for cloud infrastructure.
-
-Key features:
-- Data ingestion from CSV source with varying schemas
-- Schema homogenization and data transformation
-- Delta Lake format with partitioning
-- Comprehensive data analysis and reporting capabilities
 
 ## Setup
 
@@ -180,16 +193,6 @@ Workspace/
 
 Each notebook serves a specific purpose in the data pipeline, from ingestion to transformation to analysis.
 
-## Modifications from Original Workshop
-
-This repository includes several tweaks and enhancements compared to the original Azure-Databricks-NYC-Taxi-Workshop:
-
-- Added utilities for converting between Databricks and Jupyter notebook formats
-- Implemented synchronization scripts for notebooks and SQL files
-- Enhanced schema handling for different taxi data versions
-- Improved project structure for better organization
-- Added support for local development with VSCode
-
 ## Notes
 
 - The project handles different schema versions of NYC Taxi data across different years
@@ -197,10 +200,9 @@ This repository includes several tweaks and enhancements compared to the origina
 - Databricks notebooks can be converted to Jupyter notebooks for local development
 - SQL transformations are version-controlled and can be synchronized with Databricks
 
-## Todo
+## Future Enhancements
 
-- Add support for FHV (For-Hire Vehicle) data
-- Implement automated data quality checks
-- Create interactive dashboards for data visualization
-- Set up CI/CD pipeline for automated deployment
-- Optimize Delta Lake tables with Z-ordering
+- **Implement Airflow Orchestration**: Automate and schedule Spark jobs and SQL transformations with Apache Airflow for improved workflow management
+- **Adopt dbt for SQL Transformations**: Leverage dbt (data build tool) for better management, testing, and documentation of SQL transformation scripts
+- **Establish CI/CD Pipeline**: Set up automated testing and deployment workflows to ensure code quality and streamline releases
+- **Conduct Cloud Provider Comparison**: Evaluate Azure against other cloud platforms (AWS, GCP) for cost-effectiveness and performance benchmarks
