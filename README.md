@@ -79,8 +79,8 @@ The data flows through our system in the following pattern:
 |-------|------------|-------|---------|--------|
 | **Data Sources** | NYC Open Data | Yellow & Green Taxi CSVs | - | Raw CSV files |
 | **Data Ingestion** | Azure Data Factory | Raw CSV files | Extract & Load | Bronze layer (Raw) |
-| **Data Processing** | Databricks Notebooks | Bronze layer data | Schema homogenization | Silver layer (Processed) |
-| **Transformation** | Databricks SQL | Silver layer data | Join, aggregate, enrich | Gold layer (Curated) |
+| **Data Processing** | Databricks Notebooks | Bronze layer data | Schema homogenization | Silver layer |
+| **Transformation** | Databricks SQL | Silver layer data | Join, aggregate, enrich | Gold layer |
 | **Data Access** | Databricks SQL Warehouse | Gold layer data | SQL queries | Query results |
 | **Reporting** | Databricks Notebooks | Query results | SQL queries | Analysis results |
 
@@ -89,8 +89,8 @@ The data flows through our system in the following pattern:
 | Layer | Format | Purpose | Example Tables |
 |-------|--------|---------|---------------|
 | **Bronze** | CSV | Raw data storage | yellow_taxi_trips_raw, green_taxi_trips_raw |
-| **Silver** | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta) |
-| **Gold** | Delta Lake | Analytics-ready data | yellow_taxi_trips_transform, green_taxi_trips_transform |
+| **Silver** | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta), green_taxi_trips_transform (Delta) |
+| **Gold** | Delta Lake | Analytics-ready data | taxi_trips_mat_view |
 
 ## Setup
 
