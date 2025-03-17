@@ -174,14 +174,6 @@ The project processes a massive volume of NYC Taxi data:
 
 ## Results and Benchmarks
 
-The project successfully processes and analyzes this data with the following performance metrics:
-
-- Optimized Delta Lake tables with partitioning by year and month
-- Query performance improvements:
-  - 10-50x faster queries compared to raw CSV data
-  - Efficient filtering on partitioned columns
-  - Optimized joins with reference data
-
 ### 🕒 Data Pipeline Execution Times (Yellow Taxi)
 
 The following execution times were measured for processing the Yellow Taxi dataset (the largest dataset with 1.37B records) through the medallion architecture:
