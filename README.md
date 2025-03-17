@@ -201,8 +201,8 @@ We experimented with different transformation approaches before finding the opti
 |:----------------:|:--------------:|:--------|
 | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
 | **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >240min (4+ hours) | Second approach with two phases: |
-| | 126min | - Read JDBC from cloud data warehouse |
-| | 138min | - Write to file in storage using Spark |
+| | 126min | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | 138min | - Spark-based transformation and storage write |
 | **Cloud SQL Warehouse** | **9min 29s** | Final approach running SQL transformations directly in cloud datawarehouse |
 
 > **Note:** The dramatic performance improvement from Spark-based approaches (4+ hours) to SQL Warehouse-based transformation (9min 29s) demonstrates why we switched to Databricks SQL Cloud Datawarehouse for these workloads.
