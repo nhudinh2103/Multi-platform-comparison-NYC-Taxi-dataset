@@ -14,13 +14,17 @@ Key features:
 
 This repository includes several tweaks and enhancements compared to the original Azure-Databricks-NYC-Taxi-Workshop:
 
-### 🚀 Replaced Spark with SQL Cloud Datawarehouse
+### 🚀 Replaced Transformation by Spark with SQL Cloud Datawarehouse
 
 Switched from Spark to Databricks SQL Cloud Datawarehouse for transformations due to significant performance improvements over the original workshop's slower Spark-based approach
 
 ### 📊 Expanded Data Range for Better Benchmarking
 
 Extended data processing from the original 2016-2017 range to include all NYC taxi data from 2009-2017, creating a massive 1-billion-record dataset for more comprehensive analysis and performance testing
+
+### 🔍 Optimize Transformation Query for Big Dataset (Yellow Taxi)
+
+Added query optimization techniques (by using BROADCAST join hint and UNION ALL query approach) for better performance and ad-hoc queries on the large Yellow Taxi dataset (1.37B records)
 
 ### Additional Enhancements
 
@@ -54,35 +58,9 @@ Serves as the primary storage layer where we implement the medallion architectur
 **Databricks SQL Data Warehouse**  
 Provides the environment for data transformation and querying for reporting and analytics
 
-### Detailed Architecture
+### Batch Ingestion Flow
 
-The data flows through our system in the following pattern:
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│   Data Sources  │────▶│  Data Ingestion │────▶│ Data Processing │
-│                 │     │                 │     │                 │
-└─────────────────┘     └─────────────────┘     └────────┬────────┘
-                                                         │
-                                                         ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│    Reporting    │◀────│   Data Access   │◀────│  Transformation │
-│                 │     │                 │     │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
-
-#### Data Flow Details
-
-| Stage | Components | Input | Process | Output |
-|-------|------------|-------|---------|--------|
-| **Data Sources** | NYC Open Data | Yellow & Green Taxi CSVs | - | Raw CSV files |
-| **Data Ingestion** | Azure Data Factory | Raw CSV files | Extract & Load | Bronze layer (Raw) |
-| **Data Processing** | Databricks Notebooks | Bronze layer data | Schema homogenization | Silver layer |
-| **Transformation** | Databricks SQL | Silver layer data | Join, aggregate, enrich | Gold layer |
-| **Data Access** | Databricks SQL Warehouse | Gold layer data | SQL queries | Query results |
-| **Reporting** | Databricks Notebooks | Query results | SQL queries | Analysis results |
+![Batch Ingestion Flow](images/batch-ingestion-flow.png)
 
 #### Storage Layer Details
 
@@ -102,6 +80,9 @@ For a comprehensive setup guide, you can follow [module 01-Primer](https://githu
 - Azure Storage Account
 - Python 3.11
 - Databricks CLI configured
+- VSCode with Databricks extensions installed:
+  - [Databricks](https://marketplace.visualstudio.com/items?itemName=databricks.databricks) - Official Databricks extension for VSCode
+  - [Databricks Notebooks](https://marketplace.visualstudio.com/items?itemName=paiqo.databricks-vscode) - For working with Databricks notebooks locally
 
 ### Installation
 
@@ -156,8 +137,8 @@ The project processes a massive volume of NYC Taxi data:
 
 | Dataset | Time Period | Records | Raw CSV Size | Compressed Size (Delta) | Compression Ratio | Partitioning |
 |:-------:|:-----------:|:-------:|:------------:|:-----------------------:|:-----------------:|:------------:|
-| **Yellow Taxi Trips** | 2009-2017 | **1.37B** | ~300GB | ~120GB | **2.5:1** | Year, Month |
-| **Green Taxi Trips** | 2013-2017 | **59M** | ~15GB | ~6GB | **2.5:1** | Year, Month |
+| **Yellow Taxi Trips** | 2009-2017 | **1.37B** | 223.13GB (total) | 82.04GB | **2.6:1** | Year, Month |
+| **Green Taxi Trips** | 2013-2017 | **59M** | (included above) | 3.73GB | **2.6:1** | Year, Month |
 
 ### Reference Data
 
@@ -184,6 +165,14 @@ The project processes a massive volume of NYC Taxi data:
 | 2017 | ~62M | ~10M | ~72M |
 | **Total** | **~1.37B** | **~59M** | **~1.43B** |
 
+### Storage Container Sizes
+
+| Container | Size |
+|:---------:|:----:|
+| Bronze | 223.13GB |
+| Silver | 107.2GB |
+| Gold | 124.04GB |
+
 ## Results and Benchmarks
 
 The project successfully processes and analyzes this data with the following performance metrics:
@@ -194,40 +183,128 @@ The project successfully processes and analyzes this data with the following per
   - Efficient filtering on partitioned columns
   - Optimized joins with reference data
 
+### 🕒 Data Pipeline Execution Times (Yellow Taxi)
+
+The following execution times were measured for processing the Yellow Taxi dataset (the largest dataset with 1.37B records) through the medallion architecture:
+
+| Processing Step | Data Stage Transition | Execution Time | Details |
+|:---------------:|:---------------------:|:--------------:|:--------|
+| **Convert CSV to Parquet** | Bronze → Silver | 120min 39s | Initial data ingestion and conversion |
+| **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 9min 29s | Create table from transform SQL run directly in cloud datawarehouse |
+| **Materialize to Gold** | Silver → Gold | 10min | Final materialization step |
+
+### 🔄 Transform Method Evolution
+
+We experimented with different transformation approaches before finding the optimal solution:
+
+| Transform Method | Execution Time | Details |
+|:----------------:|:--------------:|:--------|
+| **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
+| **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >240min (4+ hours) | Second approach with two phases: |
+| | 126min | - Read JDBC from cloud data warehouse |
+| | 138min | - Write to file in storage using Spark |
+| **Cloud SQL Warehouse** | **9min 29s** | Final approach running SQL transformations directly in cloud datawarehouse |
+
+> **Note:** The dramatic performance improvement from Spark-based approaches (4+ hours) to SQL Warehouse-based transformation (9min 29s) demonstrates why we switched to Databricks SQL Cloud Datawarehouse for these workloads.
+
+### 💻 Computing Resources
+
+The following computing environment was used for all benchmarks and data processing:
+
+#### Databricks Compute Cluster
+
+| Resource Type | Specification | Details |
+|:-------------:|:-------------:|:--------|
+| **Cluster Type** | Personal Compute | Single node, single worker |
+| **Runtime Version** | 16.2 | Apache Spark 3.5.2, Scala 2.12 |
+| **Node Type** | Standard_DS4_v2 | 28 GB Memory, 8 Cores |
+
+#### SQL Warehouse
+
+| Resource Type | Specification | Details |
+|:-------------:|:-------------:|:--------|
+| **Warehouse Name** | Serverless Starter Warehouse | Serverless type |
+| **Cluster Size** | Small | 12 DBU/h/cluster |
+| **Auto Stop** | Enabled | After 10 minutes of inactivity |
+| **Scaling** | 2-4 clusters | 24 to 48 DBU capacity range |
+
+### 🚀 SQL Query Optimization Results
+
+We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques. The benchmark query ([1-join-yellow-taxi.sql](Workspace/CarsProject/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
+
+#### Optimization Techniques Tested
+
+1. **Original vs. Union Query**: 
+   - Original: Standard join approach
+   - Union: Alternative implementation using UNION ALL to combine results
+
+2. **BROADCAST Join Hint**:
+   - Explicitly tells the query optimizer to broadcast smaller tables to all nodes
+
+#### Performance Results
+
+**Full Dataset Query (Complete Results)**
+
+| Approach | Without BROADCAST | With BROADCAST | Improvement |
+|:--------:|:-----------------:|:--------------:|:-----------:|
+| Original Query | 23min 57s | 21min 27s | 10% faster |
+| Union Query | 21min 16s | **13min 14s** | **45% faster** |
+
+**Limited Dataset Query (LIMIT 1000)**
+
+| Approach | Without BROADCAST | With BROADCAST | Improvement |
+|:--------:|:-----------------:|:--------------:|:-----------:|
+| Original Query | 8min 47s | **20.117s** | **96% faster** |
+| Union Query | 9min 22s | 19.586s | 96% faster |
+
+#### Key Findings
+
+- **Best Overall Performance**: BROADCAST hint combined with union query approach (13min 14s for full dataset)
+- **Full Dataset Queries**: Combining BROADCAST and union query improves performance by 40% compared to original approach
+- **Ad-hoc Queries (LIMIT 1000)**: BROADCAST hint delivers dramatic speedup (from minutes to seconds)
+- **Recommendation**: Use BROADCAST hints for all queries, especially for interactive/ad-hoc analysis
+
 ## Project Structure
 
 The project follows a modular structure to separate different stages of the data pipeline:
 
 ```
-Workspace/
-├── 01-General/
-│   └── 2-CommonFunctions.py         # Common utility functions used across notebooks
+.
+├── README.md                        # Project documentation
+├── requirements-dev.txt             # Development dependencies
+├── sync_notebook.sh                 # Script to sync notebooks to Databricks
+├── sync_sql.sh                      # Script to sync SQL files to Databricks
+├── images/                          # Architecture diagrams
+│   ├── overall-architecture.png     # High-level architecture diagram
+│   └── batch-ingestion-flow.png     # Batch ingestion flow diagram
 │
-├── CarsProject/
-│   ├── jupyter-notebook/            # Jupyter notebooks organized by function
-│   │   ├── load-data/
-│   │   │   ├── LoadDataGreenTaxi.ipynb     # Load Green Taxi data
-│   │   │   ├── LoadDataYellowTaxi.ipynb    # Load Yellow Taxi data
-│   │   │   └── LoadReferenceData.ipynb     # Load reference data
-│   │   │
-│   │   ├── transform-data/
-│   │   │   ├── TransformData.ipynb              # General transformations
-│   │   │   └── TransformDataYellowTaxiSpark.ipynb  # Spark transformations
-│   │   │
-│   │   └── analytics/
-│   │       └── Report.ipynb         # Analysis and reporting
-│   │
-│   ├── databricks-notebook/         # Databricks version of notebooks
-│   │
-│   └── sql/                         # SQL transformations
-│       └── transform/
-│           ├── 1-transform-yellow-taxi.sql
-│           ├── 2-transform-green-taxi.sql
-│           └── 3-transform-create-materialize-view.sql
-│
-└── utilities/                       # Utility scripts
+└── Workspace/                       # Main project code
     ├── databricks_to_jupyter.py     # Convert Databricks to Jupyter format
-    └── jupyter_to_databricks.py     # Convert Jupyter to Databricks format
+    ├── jupyter_to_databricks.py     # Convert Jupyter to Databricks format
+    ├── 01-General/                  # Common utilities
+    │   └── 2-CommonFunctions.ipynb  # Common utility functions used across notebooks
+    │
+    └── CarsProject/                 # Main project code
+        ├── __init__.py              # Python package initialization
+        ├── databricks-notebook/     # Databricks version of notebooks
+        ├── jupyter-notebook/        # Jupyter notebooks organized by function
+        │   ├── analytics/           # Analysis and reporting notebooks
+        │   │   └── Report.ipynb     # Final analysis report
+        │   ├── load-data/           # Data ingestion notebooks
+        │   │   ├── LoadDataGreenTaxi.ipynb    # Load Green Taxi data
+        │   │   ├── LoadDataYellowTaxi.ipynb   # Load Yellow Taxi data
+        │   │   └── LoadReferenceData.ipynb    # Load reference data
+        │   ├── transform-data/      # Data transformation notebooks
+        │   │   ├── TransformData.ipynb              # General transformations
+        │   │   └── TransformDataYellowTaxiSpark.ipynb  # Spark transformations
+        │   └── utils/               # Utility notebooks
+        └── sql/                     # SQL transformations
+            ├── benchmark/           # SQL benchmark queries
+            │   └── 1-join-yellow-taxi.sql     # Benchmark join query
+            └── transform/           # SQL transformation queries
+                ├── 1-transform-yellow-taxi.sql
+                ├── 2-transform-green-taxi.sql
+                └── 3-transform-create-materialize-view.sql
 ```
 
 Each notebook serves a specific purpose in the data pipeline, from ingestion to transformation to analysis.
