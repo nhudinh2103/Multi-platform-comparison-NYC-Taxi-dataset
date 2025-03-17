@@ -8,7 +8,6 @@ Key features:
 - Data ingestion from CSV source with varying schemas
 - Schema homogenization and data transformation
 - Delta Lake format with partitioning
-- Comprehensive data analysis and reporting capabilities
 
 ## Modifications from Original Workshop
 
@@ -254,8 +253,8 @@ We conducted performance testing on complex join operations between taxi trip da
 
 | Approach | Without BROADCAST | With BROADCAST | Improvement |
 |:--------:|:-----------------:|:--------------:|:-----------:|
-| Original Query | 8min 47s | **20.117s** | **96% faster** |
-| Union Query | 9min 22s | 19.586s | 96% faster |
+| Original Query | 8min 47s | 20.117s | 96% faster |
+| Union Query | 9min 22s | **19.586s** | 96% faster |
 
 #### Key Findings
 
@@ -308,13 +307,6 @@ The project follows a modular structure to separate different stages of the data
 ```
 
 Each notebook serves a specific purpose in the data pipeline, from ingestion to transformation to analysis.
-
-## Notes
-
-- The project handles different schema versions of NYC Taxi data across different years
-- Data is stored in Delta format for reliability and performance
-- Databricks notebooks can be converted to Jupyter notebooks for local development
-- SQL transformations are version-controlled and can be synchronized with Databricks
 
 ## Future Enhancements
 
