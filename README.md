@@ -60,7 +60,7 @@ Provides the environment for data transformation and querying for reporting and 
 
 ### Batch Ingestion Flow
 
-![Batch Ingestion Flow](images/batch-ingestion-flow.png)
+![Batch Ingestion Flow](images/batch-ingestion-flow.png!)
 
 #### Storage Layer Details
 
