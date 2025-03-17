@@ -3,7 +3,7 @@ FSCK REPAIR TABLE nyctaxi.yellow_taxi_trips_raw;
 CREATE OR REPLACE TABLE `synapse_nyc_reference`.`nyctaxi`.yellow_taxi_trips_transform
 USING DELTA
 PARTITIONED BY (trip_year, trip_month)  -- Hive-style partitioning
-LOCATION 'abfss://silver@dinhnnpreniumstorage.dfs.core.windows.net/nyctaxi/transform_dw/yellow-taxi/'
+LOCATION 'abfss://silver@dinhnncarsalesdatalake.dfs.core.windows.net/nyctaxi/transform_dw/yellow-taxi/'
 AS
 SELECT
   taxi_type,
