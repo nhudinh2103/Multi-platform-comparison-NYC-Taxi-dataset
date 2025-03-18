@@ -1,21 +1,16 @@
 # NYC Taxi Data Analytics with Databricks
 
-A comprehensive data engineering solution for processing, analyzing, and visualizing New York City taxi trip data using Databricks, Delta Lake, and Azure Data Services. This project is inspired by [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop).
+A multi-cloud data engineering solution for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with SQL Cloud Datawarehouse, expanded data range (2009-2017), and query optimizations using BROADCAST hints.
 
-This project provides an end-to-end solution for processing and analyzing NYC Taxi trip data (Yellow and Green taxis). It demonstrates a modern data engineering approach using Databricks for data processing, Delta Lake for reliable data storage, and Azure Data Services for cloud infrastructure.
-
-Key features:
-- Data ingestion from CSV source with varying schemas
-- Schema homogenization and data transformation
-- Delta Lake format with partitioning
+Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management.
 
 ## Modifications from Original Workshop
 
 This repository includes several tweaks and enhancements compared to the original Azure-Databricks-NYC-Taxi-Workshop:
 
-### 🚀 Replaced Transformation by Spark with SQL Cloud Datawarehouse
+### 🚀 Replaced Transformation by Spark with Cloud SQL Data Warehouse
 
-Switched from Spark to Databricks SQL Cloud Datawarehouse for transformations due to significant performance improvements over the original workshop's slower Spark-based approach
+Switched from Spark to Databricks Cloud SQL Data Warehouse for transformations due to significant performance improvements over the original workshop's slower Spark-based approach
 
 ### 📊 Expanded Data Range for Better Benchmarking
 
@@ -29,7 +24,6 @@ Added query optimization techniques (by using BROADCAST join hint and UNION ALL 
 
 - Added utilities for converting between Databricks and Jupyter notebook formats
 - Implemented synchronization scripts for notebooks and SQL files
-- Enhanced schema handling for different taxi data versions
 - Added support for local development with VSCode
 
 ## Architecture
@@ -44,8 +38,8 @@ The architecture consists of several key components that are implemented differe
 
 **Data Synchronization**  
 Copies data from NYC source into cloud storage (stored as CSV)
-- Azure: Azure Data Factory
-- GCP: Storage Transfer Service
+- Azure: **Azure Data Factory**
+- GCP: **Storage Transfer Service**
 
 **Data Ingestion (Apache Spark)**  
 Apache Spark on Databricks processes raw CSV data into optimized formats for analytics:
@@ -56,18 +50,18 @@ Apache Spark on Databricks processes raw CSV data into optimized formats for ana
 
 **Secret Management**  
 Stores sensitive information like secrets and credentials for connecting to Databricks and cloud services
-- Azure: Azure Key Vault
-- GCP: Databricks secrets
+- Azure: **Azure Key Vault**
+- GCP: **Databricks secrets**
 
 **Storage**  
 Serves as the primary storage layer where we implement the medallion architecture (Bronze, Silver, Gold layers)
-- Azure: Azure Data Lake Storage Gen2
-- GCP: Google Cloud Storage (GCS)
+- Azure: **Azure Data Lake Storage Gen2**
+- GCP: **Google Cloud Storage (GCS)**
 
 **Cloud Data Warehouse**  
 Provides the environment for data transformation and querying for reporting and analytics
-- Azure: Azure Synapse
-- GCP: Google BigQuery
+- Azure: **Azure Synapse**
+- GCP: **Google BigQuery**
 
 ### Batch Ingestion Flow
 
