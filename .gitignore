@@ -101,3 +101,5 @@ metastore_db/
 *.tmp
 *.temp
 .~*
+
+.databricks
