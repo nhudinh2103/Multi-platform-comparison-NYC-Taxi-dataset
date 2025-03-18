@@ -38,24 +38,36 @@ Added query optimization techniques (by using BROADCAST join hint and UNION ALL 
 
 ![Overall Architecture](images/overall-architecture.png)
 
-The architecture consists of several key components:
+The architecture consists of several key components that are implemented differently across cloud providers:
 
-**Azure Data Factory**  
-Synchronizes data from NYC source to our container storage (stored as CSV)
+#### Common Components
 
-**Apache Spark**  
-Used for data ingestion to read and convert CSV to columnar compressed files:
-- Fixed schema CSV data tables (reference data) are stored in Parquet format
-- Dynamic schema with schema evolution (taxi trip data) is stored in Delta Lake format
+**Data Synchronization**  
+Copies data from NYC source into cloud storage (stored as CSV)
+- Azure: Azure Data Factory
+- GCP: Storage Transfer Service
 
-**Azure Key Vault**  
-Stores sensitive information like secrets and credentials for connecting to Databricks and Azure services
+**Data Ingestion (Apache Spark)**  
+Apache Spark on Databricks processes raw CSV data into optimized formats for analytics:
+- Converts CSV to Parquet (reference data) and Delta Lake (trip data)
+- Handles schema evolution and data partitioning
+- Provides distributed processing for large-scale data transformation
+- Enables efficient data processing with in-memory computation
 
-**Azure Data Lake Storage Gen2**  
+**Secret Management**  
+Stores sensitive information like secrets and credentials for connecting to Databricks and cloud services
+- Azure: Azure Key Vault
+- GCP: Databricks secrets
+
+**Storage**  
 Serves as the primary storage layer where we implement the medallion architecture (Bronze, Silver, Gold layers)
+- Azure: Azure Data Lake Storage Gen2
+- GCP: Google Cloud Storage (GCS)
 
-**Databricks SQL Data Warehouse**  
+**Cloud Data Warehouse**  
 Provides the environment for data transformation and querying for reporting and analytics
+- Azure: Azure Synapse
+- GCP: Google BigQuery
 
 ### Batch Ingestion Flow
 
