@@ -116,7 +116,7 @@ EOF
     
     # Output the curl command for debugging
     echo "Curl command for debugging:"
-    echo "curl -v -X POST \\"
+    echo "curl -X POST \\"
     echo "    -H \"Authorization: Bearer $TOKEN\" \\"
     echo "    -H \"Content-Type: application/json\" \\"
     echo "    -d @\"$TEMP_FILE\" \\"
@@ -124,7 +124,7 @@ EOF
     
     # Import the SQL file to Databricks workspace
     echo "Importing SQL file to Databricks workspace..."
-    RESPONSE=$(curl -v -X POST \
+    RESPONSE=$(curl -X POST \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
         -d @"$TEMP_FILE" \
