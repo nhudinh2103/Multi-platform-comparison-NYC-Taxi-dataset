@@ -174,54 +174,9 @@ The project processes a massive volume of NYC Taxi data:
 
 ## Results and Benchmarks
 
-### 🕒 Data Pipeline Execution Times (Yellow Taxi)
+### 🚀 SQL Query Optimization Results (Azure)
 
-The following execution times were measured for processing the Yellow Taxi dataset (the largest dataset with 1.37B records) through the medallion architecture:
-
-| Processing Step | Data Stage Transition | Execution Time | Details |
-|:---------------:|:---------------------:|:--------------:|:--------|
-| **Convert CSV to Parquet** | Bronze → Silver | 120min 39s | Initial data ingestion and conversion |
-| **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 9min 29s | Create table from transform SQL run directly in cloud datawarehouse |
-| **Materialize to Gold** | Silver → Gold | 10min | Final materialization step |
-
-### 🔄 Transform Method Evolution
-
-We experimented with different transformation approaches before finding the optimal solution:
-
-| Transform Method | Execution Time | Details |
-|:----------------:|:--------------:|:--------|
-| **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
-| **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >240min (4+ hours) | Second approach with two phases: |
-| | 126min | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
-| | 138min | - Spark-based transformation and storage write |
-| **Cloud SQL Warehouse** | **9min 29s** | Final approach running SQL transformations directly in cloud datawarehouse |
-
-> **Note:** The dramatic performance improvement from Spark-based approaches (4+ hours) to SQL Warehouse-based transformation (9min 29s) demonstrates why we switched to Databricks SQL Cloud Datawarehouse for these workloads.
-
-### 💻 Computing Resources
-
-The following computing environment was used for all benchmarks and data processing:
-
-#### Databricks Compute Cluster
-
-| Resource Type | Specification | Details |
-|:-------------:|:-------------:|:--------|
-| **Cluster Type** | Personal Compute | Single node, single worker |
-| **Runtime Version** | 16.2 | Apache Spark 3.5.2, Scala 2.12 |
-| **Node Type** | Standard_DS4_v2 | 28 GB Memory, 8 Cores |
-
-#### SQL Warehouse
-
-| Resource Type | Specification | Details |
-|:-------------:|:-------------:|:--------|
-| **Warehouse Name** | Serverless Starter Warehouse | Serverless type |
-| **Cluster Size** | Small | 12 DBU/h/cluster |
-| **Auto Stop** | Enabled | After 10 minutes of inactivity |
-| **Scaling** | 2-4 clusters | 24 to 48 DBU capacity range |
-
-### 🚀 SQL Query Optimization Results
-
-We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques. The benchmark query ([1-join-yellow-taxi.sql](Workspace/CarsProject/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
+We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques on Azure Databricks. The benchmark query ([1-join-yellow-taxi.sql](Workspace/CarsProject/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
 
 #### Optimization Techniques Tested
 
@@ -254,6 +209,57 @@ We conducted performance testing on complex join operations between taxi trip da
 - **Full Dataset Queries**: Combining BROADCAST and union query improves performance by 40% compared to original approach
 - **Ad-hoc Queries (LIMIT 1000)**: BROADCAST hint delivers dramatic speedup (from minutes to seconds)
 - **Recommendation**: Use BROADCAST hints for all queries, especially for interactive/ad-hoc analysis
+
+### 🕒 Data Pipeline Execution Times (Yellow Taxi)
+
+The following execution times were measured for processing the Yellow Taxi dataset (the largest dataset with 1.37B records) through the medallion architecture:
+
+| Cloud Provider | Processing Step | Data Stage Transition | Execution Time | Details |
+|:--------------:|:---------------:|:---------------------:|:--------------:|:--------|
+| **Azure** | **Convert CSV to Parquet** | Bronze → Silver | 120min 39s | Initial data ingestion and conversion |
+| | **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 9min 29s | Create table from transform SQL run directly in cloud datawarehouse |
+| | **Materialize to Gold** | Silver → Gold | 10min | Final materialization step |
+| **GCP** | **Convert CSV to Parquet** | Bronze → Silver | 91min | Initial data ingestion and conversion |
+| | **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 15min 5s | Create table from transform SQL run directly in cloud datawarehouse |
+| | **Materialize to Gold** | Silver → Gold | 14min 55.3s | Final materialization step |
+
+### 🔄 Transform Method Evolution
+
+We experimented with different transformation approaches before finding the optimal solution:
+
+| Transform Method | Execution Time | Details |
+|:----------------:|:--------------:|:--------|
+| **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
+| **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >240min (4+ hours) | Second approach with two phases: |
+| | 126min | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | 138min | - Spark-based transformation and storage write |
+| **Cloud SQL Warehouse** | **9min 29s** | Final approach running SQL transformations directly in cloud datawarehouse |
+
+> **Note:** The dramatic performance improvement from Spark-based approaches (4+ hours) to SQL Warehouse-based transformation (9min 29s) demonstrates why we switched to Databricks SQL Cloud Datawarehouse for these workloads.
+
+### 💻 Computing Resources
+
+The following computing environment was used for all benchmarks and data processing:
+
+#### Databricks Compute Cluster
+
+| Cloud Provider | Resource Type | Specification | Details |
+|:--------------:|:-------------:|:-------------:|:--------|
+| **Azure** | **Cluster Type** | Personal Compute | Single node, single worker |
+| | **Runtime Version** | 16.2 | Apache Spark 3.5.2, Scala 2.12 |
+| | **Node Type** | Standard_DS4_v2 | 28 GB Memory, 8 Cores |
+| **GCP** | **Cluster Type** | Personal Compute | Single node, single worker |
+| | **Runtime Version** | 16.2 | Apache Spark 3.5.2, Scala 2.12 |
+| | **Node Type** | n2-highmem-8 | 64 GB Memory, 8 Cores |
+
+#### SQL Warehouse
+
+| Resource Type | Specification | Details |
+|:-------------:|:-------------:|:--------|
+| **Warehouse Name** | Serverless Starter Warehouse | Serverless type |
+| **Cluster Size** | Small | 12 DBU/h/cluster |
+| **Auto Stop** | Enabled | After 10 minutes of inactivity |
+| **Scaling** | 2-4 clusters | 24 to 48 DBU capacity range |
 
 ## Project Structure
 
