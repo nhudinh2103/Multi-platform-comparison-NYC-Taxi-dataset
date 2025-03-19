@@ -1,6 +1,6 @@
 # NYC Taxi Data Analytics with Databricks
 
-A multi-cloud data engineering solution for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with SQL Cloud Datawarehouse, expanded data range (2009-2017), and query optimizations using BROADCAST hints.
+A experiment data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks with different cloud vendors for performance and cost comparison. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with SQL Cloud Datawarehouse, expanded data range (2009-2017), and query optimizations using BROADCAST hints.
 
 Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management.
 
@@ -239,8 +239,8 @@ We experimented with different transformation approaches before finding the opti
 |:----------------:|:--------------:|:--------|
 | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
 | **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/azure/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >4 hours | Second approach with two phases: |
-| | ~2.1 hours | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
-| | ~2.3 hours | - Spark-based transformation and storage write |
+| | ~2.1 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | ~2.3 hours | Spark-based transformation and storage write |
 | **Databricks SQL Datawarehouse** | **9min 29s** | Final approach running SQL transformations directly in Databricks SQL |
 
 #### GCP Transformation Methods
@@ -249,8 +249,8 @@ We experimented with different transformation approaches before finding the opti
 |:----------------:|:--------------:|:--------|
 | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
 | **Hybrid Spark** | 3.5 hours | Second approach with two phases: |
-| | 2.4 hours | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
-| | 1.1 hours | - Spark-based transformation and storage write |
+| | 2.4 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | 1.1 hours | Spark-based transformation and storage write |
 | **Databricks SQL Datawarehouse** | 14min 55s | Intermediate approach using Databricks SQL |
 | **Cloud SQL Warehouse (BigQuery)** | **1min 20s** | Final approach running SQL transformations directly in BigQuery |
 
