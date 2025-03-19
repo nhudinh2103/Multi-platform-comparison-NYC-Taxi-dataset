@@ -323,9 +323,6 @@ The project follows a modular structure to separate different stages of the data
         │   │   ├── transform-data/
         │   │   │   ├── TransformData.ipynb
         │   │   │   └── TransformDataBigquery.ipynb
-        │   │   └── utils/
-        │   │       ├── bigquery_databricks_utils.py
-        │   │       └── bigquery_utils.py
         │   └── utils/
         └── sql/
             ├── benchmark/
