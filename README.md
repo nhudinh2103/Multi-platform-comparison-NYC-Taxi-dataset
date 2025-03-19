@@ -231,17 +231,30 @@ The following execution times were measured for processing the Yellow Taxi datas
 
 ### 🔄 Transform Method Evolution
 
-We experimented with different transformation approaches before finding the optimal solution:
+We experimented with different transformation approaches before finding the optimal solution across both cloud platforms:
+
+#### Azure Transformation Methods
 
 | Transform Method | Execution Time | Details |
 |:----------------:|:--------------:|:--------|
 | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
-| **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >240min (4+ hours) | Second approach with two phases: |
-| | 126min | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
-| | 138min | - Spark-based transformation and storage write |
-| **Cloud SQL Warehouse** | **9min 29s** | Final approach running SQL transformations directly in cloud datawarehouse |
+| **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/azure/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >4 hours | Second approach with two phases: |
+| | ~2.1 hours | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | ~2.3 hours | - Spark-based transformation and storage write |
+| **Databricks SQL Datawarehouse** | **9min 29s** | Final approach running SQL transformations directly in Databricks SQL |
 
-> **Note:** The dramatic performance improvement from Spark-based approaches (4+ hours) to SQL Warehouse-based transformation (9min 29s) demonstrates why we switched to Databricks SQL Cloud Datawarehouse for these workloads.
+#### GCP Transformation Methods
+
+| Transform Method | Execution Time | Details |
+|:----------------:|:--------------:|:--------|
+| **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
+| **Hybrid Spark** | 3.5 hours | Second approach with two phases: |
+| | 2.4 hours | - Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | 1.1 hours | - Spark-based transformation and storage write |
+| **Databricks SQL Datawarehouse** | 14min 55s | Intermediate approach using Databricks SQL |
+| **Cloud SQL Warehouse (BigQuery)** | **1min 20s** | Final approach running SQL transformations directly in BigQuery |
+
+> **Note:** The dramatic performance improvements from Spark-based approaches (3.5+ hours) to SQL-based transformations (9min 29s on Azure Databricks SQL, 1min 20s on GCP BigQuery) demonstrate why we switched to cloud-native data warehousing solutions for these workloads. GCP's BigQuery showed particularly impressive performance with a 160x speedup over the Hybrid Spark approach.
 
 ### 💻 Computing Resources
 
@@ -269,45 +282,63 @@ The following computing environment was used for all benchmarks and data process
 
 ## Project Structure
 
-The project follows a modular structure to separate different stages of the data pipeline:
+The project follows a modular structure to separate different stages of the data pipeline, with cloud-specific implementations:
 
 ```
 .
-├── README.md                        # Project documentation
-├── requirements-dev.txt             # Development dependencies
-├── sync_notebook.sh                 # Script to sync notebooks to Databricks
-├── sync_sql.sh                      # Script to sync SQL files to Databricks
-├── images/                          # Architecture diagrams
-│   ├── overall-architecture.png     # High-level architecture diagram
-│   └── batch-ingestion-flow.png     # Batch ingestion flow diagram
+├── README.md
+├── requirements-dev.txt
+├── sync_notebook.sh
+├── sync_sql.sh
+├── images/
+│   ├── overall-architecture.png
+│   └── batch-ingestion-flow.png
 │
-└── Workspace/                       # Main project code
-    ├── databricks_to_jupyter.py     # Convert Databricks to Jupyter format
-    ├── jupyter_to_databricks.py     # Convert Jupyter to Databricks format
-    ├── 01-General/                  # Common utilities
-    │   └── 2-CommonFunctions.ipynb  # Common utility functions used across notebooks
+└── Workspace/
+    ├── databricks_to_jupyter.py
+    ├── jupyter_to_databricks.py
+    ├── 01-General/
+    │   └── 2-CommonFunctions.ipynb
     │
-    └── CarsProject/                 # Main project code
-        ├── __init__.py              # Python package initialization
-        ├── databricks-notebook/     # Databricks version of notebooks
-        ├── jupyter-notebook/        # Jupyter notebooks organized by function
-        │   ├── analytics/           # Analysis and reporting notebooks
-        │   │   └── Report.ipynb     # Final analysis report
-        │   ├── load-data/           # Data ingestion notebooks
-        │   │   ├── LoadDataGreenTaxi.ipynb    # Load Green Taxi data
-        │   │   ├── LoadDataYellowTaxi.ipynb   # Load Yellow Taxi data
-        │   │   └── LoadReferenceData.ipynb    # Load reference data
-        │   ├── transform-data/      # Data transformation notebooks
-        │   │   ├── TransformData.ipynb              # General transformations
-        │   │   └── TransformDataYellowTaxiSpark.ipynb  # Spark transformations
-        │   └── utils/               # Utility notebooks
-        └── sql/                     # SQL transformations
-            ├── benchmark/           # SQL benchmark queries
-            │   └── 1-join-yellow-taxi.sql     # Benchmark join query
-            └── transform/           # SQL transformation queries
-                ├── 1-transform-yellow-taxi.sql
-                ├── 2-transform-green-taxi.sql
-                └── 3-transform-create-materialize-view.sql
+    └── CarsProject/
+        ├── databricks-notebook/
+        ├── jupyter-notebook/
+        │   ├── azure/
+        │   │   ├── analytics/
+        │   │   │   └── Report.ipynb
+        │   │   ├── load-data/
+        │   │   │   ├── LoadDataGreenTaxi.ipynb
+        │   │   │   ├── LoadDataYellowTaxi.ipynb
+        │   │   │   └── LoadReferenceData.ipynb
+        │   │   └── transform-data/
+        │   │       ├── TransformData.ipynb
+        │   │       └── TransformDataYellowTaxiSpark.ipynb
+        │   ├── gcp/
+        │   │   ├── analytics/
+        │   │   │   └── Report.ipynb
+        │   │   ├── load-data/
+        │   │   │   ├── LoadDataGreenTaxi.ipynb
+        │   │   │   ├── LoadDataYellowTaxi.ipynb
+        │   │   │   └── LoadReferenceData.ipynb
+        │   │   ├── transform-data/
+        │   │   │   ├── TransformData.ipynb
+        │   │   │   └── TransformDataBigquery.ipynb
+        │   │   └── utils/
+        │   │       ├── bigquery_databricks_utils.py
+        │   │       └── bigquery_utils.py
+        │   └── utils/
+        └── sql/
+            ├── benchmark/
+            │   └── 1-join-yellow-taxi.sql
+            └── transform/
+                ├── databricks/
+                │   ├── 1-transform-yellow-taxi.sql
+                │   ├── 2-transform-green-taxi.sql
+                │   └── 3-transform-create-materialize-view.sql
+                └── bigquery/
+                    ├── 1-bq-transform-yellow-taxi.sql
+                    ├── 2-bq-transform-green-taxi.sql
+                    └── 3-bq-transform-create-materialize-view.sql
 ```
 
 Each notebook serves a specific purpose in the data pipeline, from ingestion to transformation to analysis.
