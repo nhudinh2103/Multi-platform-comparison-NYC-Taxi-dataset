@@ -1,8 +1,8 @@
 # NYC Taxi Data Analytics with Databricks
 
-An experiment data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks with different cloud vendors for performance and cost comparison. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with SQL Cloud Datawarehouse, expanded data range (2009-2017), and query optimizations using BROADCAST hints.
+An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks across different cloud vendors to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop)  with significant performance improvements by replacing Spark transformations with SQL Cloud Data Warehouse, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
 
-Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management.
+Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform’s native services for storage, data warehousing, and secret management.
 
 ## Modifications from Original Workshop
 
