@@ -107,9 +107,26 @@ For a comprehensive setup guide, you can follow [module 01-Primer](https://githu
    databricks configure --token
    ```
 
-4. Set up Azure Storage credentials in Databricks secrets:
-   - Create a secret scope named "azure-databricks"
-   - Add secrets for "storage-name" and "storage-key"
+4. Set up secrets for your cloud provider:
+
+   #### For Azure:
+   - Create an Azure Key Vault to store your secrets
+   - In Databricks, create a secret scope named "azure-databricks" linked to your Azure Key Vault
+   - Add the following secrets to your Azure Key Vault:
+     - `warehouse-sql-host`: SQL warehouse host URL
+     - `warehouse-sql-token`: SQL warehouse access token
+     - `warehouse-sql-warehouseid`: SQL warehouse ID
+     - `warehouse-sql-catalog-nyc`: SQL catalog name for NYC data
+     - `warehouse-sql-schema-nyc`: SQL schema name for NYC data
+     - `storage-name`: Azure Storage account name
+     - `storage-key`: Azure Storage account key
+
+   #### For GCP:
+   - In Databricks, create a secret scope named "databricks-warehouse"
+   - Add the following secrets directly in Databricks:
+     - `sql-host`: SQL warehouse host URL
+     - `sql-token`: SQL warehouse access token
+     - `warehouseid`: SQL warehouse ID
 
 ### Additional Setup Resources
 
