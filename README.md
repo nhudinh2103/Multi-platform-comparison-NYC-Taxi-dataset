@@ -252,11 +252,11 @@ The following execution times were measured for processing the Yellow Taxi datas
 | Cloud Provider | Processing Step | Data Stage Transition | Execution Time | Details |
 |:--------------:|:---------------:|:---------------------:|:--------------:|:--------|
 | **Azure** | **Convert CSV to Parquet** | Bronze → Silver | 120min 39s | Initial data ingestion and conversion |
-| | **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 11min 28s | Create table from transform SQL run directly in cloud datawarehouse |
-| | **Materialize to Gold** | Silver → Gold | 10min | Final materialization step |
+| | **Transform** | Silver → Silver (transformed) | 11min 28s | Create table from transform SQL run in Databricks SQL Warehouse |
+| | **Materialize** | Silver → Gold | 14min 26s | Final materialization step in Databricks SQL Warehouse |
 | **GCP** | **Convert CSV to Parquet** | Bronze → Silver | 91min | Initial data ingestion and conversion |
-| | **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 15min 5s | Create table from transform SQL run directly in cloud datawarehouse |
-| | **Materialize to Gold** | Silver → Gold | 14min 55.3s | Final materialization step |
+| | **Transform** | Silver → Silver (transformed) | 1min 37s | Create table from transform SQL run in Cloud SQL Warehouse (BigQuery) |
+| | **Materialize** | Silver → Gold | 1min 3s | Final materialization step in Cloud SQL Warehouse (BigQuery) |
 
 ### 🔄 Transform Method Evolution
 
@@ -269,13 +269,13 @@ We experimented with different transformation approaches before finding the opti
 | | | ~2.1 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
 | | | ~2.3 hours | Spark-based transformation and storage write |
 | | **Databricks SQL Datawarehouse** | **11min 28s** | Final approach running SQL transformations directly in Databricks SQL |
-| | **Cloud SQL Warehouse** | N/A | Unable to run due to compute capacity exceed |
+| | **Cloud SQL Warehouse (Azure Synapse)** | **`N/A`** | Unable to run due to compute capacity exceed |
 |||||
 | **GCP** | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
 | | **Hybrid Spark** ([GCPTransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/gcp/transform-data/GCPTransformDataYellowTaxiSpark.ipynb)) | 3.5 hours | Second approach with two phases: |
 | | | 2.4 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
 | | | 1.1 hours | Spark-based transformation and storage write |
-| | **Databricks SQL Datawarehouse** | 14min 55s | Intermediate approach using Databricks SQL |
+| | **Databricks SQL Datawarehouse** | **14min 55s** | Intermediate approach using Databricks SQL |
 | | **Cloud SQL Warehouse (BigQuery)** | **1min 20s** | Final approach running SQL transformations directly in BigQuery |
 
 > **Note:** 
