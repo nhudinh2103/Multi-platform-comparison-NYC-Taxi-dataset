@@ -25,21 +25,55 @@ fi
 
 echo "Reading Databricks configuration..."
 
-# Get Databricks token and host from CLI config
+# Get Databricks profiles, token and host from CLI config
 if [ -f ~/.databrickscfg ]; then
     echo "Found ~/.databrickscfg file"
-    # Try to get token with or without the bracket
-    TOKEN=$(grep -A2 "DEFAULT]" ~/.databrickscfg | grep "token" | cut -d'=' -f2 | tr -d ' ')
-    if [ -z "$TOKEN" ]; then
-        # Try alternative format
-        TOKEN=$(grep "token" ~/.databrickscfg | cut -d'=' -f2 | tr -d ' ')
-    fi
     
-    # Get the host (workspace URL)
-    WORKSPACE_URL=$(grep -A2 "DEFAULT]" ~/.databrickscfg | grep "host" | cut -d'=' -f2 | tr -d ' ')
-    if [ -z "$WORKSPACE_URL" ]; then
-        # Try alternative format
-        WORKSPACE_URL=$(grep "host" ~/.databrickscfg | cut -d'=' -f2 | tr -d ' ')
+    # Check if multiple profiles exist
+    PROFILES=$(grep -o '\[[^]]*\]' ~/.databrickscfg | tr -d '[]')
+    PROFILE_COUNT=$(echo "$PROFILES" | wc -l)
+    
+    # If multiple profiles exist, ask user to select one
+    if [ "$PROFILE_COUNT" -gt 1 ]; then
+        echo "Multiple Databricks profiles found:"
+        PROFILE_NUM=1
+        for PROFILE in $PROFILES; do
+            echo "$PROFILE_NUM) $PROFILE"
+            PROFILE_NUM=$((PROFILE_NUM + 1))
+        done
+        
+        # Ask user to select a profile
+        read -p "Please select a profile number (1-$PROFILE_COUNT): " SELECTION
+        
+        # Validate selection
+        if ! [[ "$SELECTION" =~ ^[0-9]+$ ]] || [ "$SELECTION" -lt 1 ] || [ "$SELECTION" -gt "$PROFILE_COUNT" ]; then
+            echo "Error: Invalid selection. Please enter a number between 1 and $PROFILE_COUNT."
+            exit 1
+        fi
+        
+        # Get the selected profile
+        SELECTED_PROFILE=$(echo "$PROFILES" | sed -n "${SELECTION}p")
+        echo "Using profile: $SELECTED_PROFILE"
+        
+        # Get token and host for the selected profile
+        TOKEN=$(grep -A2 "\[$SELECTED_PROFILE\]" ~/.databrickscfg | grep "token" | cut -d'=' -f2 | tr -d ' ')
+        WORKSPACE_URL=$(grep -A2 "\[$SELECTED_PROFILE\]" ~/.databrickscfg | grep "host" | cut -d'=' -f2 | tr -d ' ')
+    else
+        # Only one profile exists, use DEFAULT
+        echo "Using DEFAULT profile"
+        # Try to get token with or without the bracket
+        TOKEN=$(grep -A2 "DEFAULT]" ~/.databrickscfg | grep "token" | cut -d'=' -f2 | tr -d ' ')
+        if [ -z "$TOKEN" ]; then
+            # Try alternative format
+            TOKEN=$(grep "token" ~/.databrickscfg | cut -d'=' -f2 | tr -d ' ')
+        fi
+        
+        # Get the host (workspace URL)
+        WORKSPACE_URL=$(grep -A2 "DEFAULT]" ~/.databrickscfg | grep "host" | cut -d'=' -f2 | tr -d ' ')
+        if [ -z "$WORKSPACE_URL" ]; then
+            # Try alternative format
+            WORKSPACE_URL=$(grep "host" ~/.databrickscfg | cut -d'=' -f2 | tr -d ' ')
+        fi
     fi
     
     if [ -z "$TOKEN" ]; then
