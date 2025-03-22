@@ -207,6 +207,22 @@ We tracked the costs associated with running our data pipeline across both cloud
 | **GCP** | **Convert CSV to Parquet** | Virtual Machine | $2.00 |
 | | | Databricks Runtime | $6.15 |
 
+### Key Cost Considerations for Databricks Clusters
+
+When provisioning Databricks computing clusters, consider these cost-optimization factors:
+
+- **Spot Instances**: Evaluate whether to use spot instances for significant cost savings on non-critical workloads.
+  
+- **Photon Engine**: Enable the Photon engine to optimize Spark SQL performance. This significantly impacts DBU pricing - for example, an n2-highmem-4 instance costs 1.96 DBU/hour with Photon versus 0.96 DBU/hour without Photon.
+  
+- **Compute Type Selection**: Choose the appropriate compute type based on your workload requirements:
+  - All-purpose compute: For interactive development
+  - Job compute: For scheduled production workloads
+  - SQL compute: For data warehousing operations
+  - SQL serverless: For on-demand query processing
+  
+Each option offers different pricing models and performance characteristics.
+
 ## Benchmark Results
 
 ### 🚀 SQL Query Optimization Results (Azure)
@@ -341,7 +357,6 @@ The project follows a modular structure to separate different stages of the data
 .
 ├── README.md
 ├── requirements-dev.txt
-├── sync_notebook.sh
 ├── sync_sql.sh
 ├── images/
 │   ├── overall-architecture.png
@@ -354,44 +369,58 @@ The project follows a modular structure to separate different stages of the data
     │   └── 2-CommonFunctions.ipynb
     │
     └── CarsProject/
-        ├── databricks-notebook/
         ├── jupyter-notebook/
         │   ├── azure/
         │   │   ├── analytics/
         │   │   │   └── Report.ipynb
         │   │   ├── load-data/
-        │   │   │   ├── LoadDataGreenTaxi.ipynb
-        │   │   │   ├── LoadDataYellowTaxi.ipynb
-        │   │   │   └── LoadReferenceData.ipynb
+        │   │   │   ├── AzureLoadDataGreenTaxi.ipynb
+        │   │   │   ├── AzureLoadDataYellowTaxi.ipynb
+        │   │   │   └── AzureLoadReferenceData.ipynb
         │   │   └── transform-data/
-        │   │       ├── TransformData.ipynb
-        │   │       └── TransformDataYellowTaxiSpark.ipynb
-        │   ├── gcp/
-        │   │   ├── analytics/
-        │   │   │   └── Report.ipynb
-        │   │   ├── load-data/
-        │   │   │   ├── LoadDataGreenTaxi.ipynb
-        │   │   │   ├── LoadDataYellowTaxi.ipynb
-        │   │   │   └── LoadReferenceData.ipynb
-        │   │   ├── transform-data/
-        │   │   │   ├── TransformData.ipynb
-        │   │   │   └── TransformDataBigquery.ipynb
-        │   └── utils/
+        │   │       ├── AzureTransformData.ipynb
+        │   │       └── AzureTransformDataYellowTaxiSpark.ipynb
+        │   │
+        │   └── gcp/
+        │       ├── analytics/
+        │       │   └── Report.ipynb
+        │       ├── create-secret.sh
+        │       ├── load-data/
+        │       │   ├── GCPLoadDataGreenTaxi.ipynb
+        │       │   ├── GCPLoadDataYellowTaxi.ipynb
+        │       │   └── GCPLoadReferenceData.ipynb
+        │       ├── transform-data/
+        │       │   ├── GCPTransformData.ipynb
+        │       │   ├── GCPTransformDataBigquery.ipynb
+        │       │   └── GCPTransformDataYellowTaxiSpark.ipynb
+        │
         └── sql/
             ├── benchmark/
             │   └── 1-join-yellow-taxi.sql
             └── transform/
-                ├── databricks/
-                │   ├── 1-transform-yellow-taxi.sql
-                │   ├── 2-transform-green-taxi.sql
-                │   └── 3-transform-create-materialize-view.sql
-                └── bigquery/
-                    ├── 1-bq-transform-yellow-taxi.sql
-                    ├── 2-bq-transform-green-taxi.sql
-                    └── 3-bq-transform-create-materialize-view.sql
+                ├── azure/
+                │   └── databricks/
+                │       ├── 1-transform-yellow-taxi.sql
+                │       ├── 2-transform-green-taxi.sql
+                │       └── 3-transform-create-materialize-view.sql
+                └── gcp/
+                    ├── bigquery/
+                    │   ├── 1-bq-transform-yellow-taxi.sql
+                    │   ├── 2-bq-transform-green-taxi.sql
+                    │   ├── 3-bq-transform-create-materialize-view.sql
+                    │   └── gcp_billing_by_label.sql
+                    └── databricks/
+                        ├── 1-transform-yellow-taxi.sql
+                        ├── 2-transform-green-taxi.sql
+                        └── 3-transform-create-materialize-view.sql
 ```
 
-Each notebook serves a specific purpose in the data pipeline, from ingestion to transformation to analysis.
+Each component in this structure serves a specific purpose in the data pipeline:
+
+- **Notebooks**: Organized by cloud provider (Azure/GCP) and pipeline stage (load/transform/analytics)
+- **SQL Scripts**: Separated by cloud provider and execution environment (Databricks/BigQuery)
+- **Utility Scripts**: For conversion between notebook formats and synchronization with Databricks
+- **Configuration Files**: For project settings and environment setup
 
 ## Future Enhancements
 
