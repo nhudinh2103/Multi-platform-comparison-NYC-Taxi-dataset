@@ -195,7 +195,19 @@ The project processes a massive volume of NYC Taxi data:
 | Silver | 107.2GB |
 | Gold | 124.04GB |
 
-## Results and Benchmarks
+## Cost Analysis
+
+We tracked the costs associated with running our data pipeline across both cloud platforms:
+
+| Cloud Provider | Operation | Compute Service | Cost (USD) |
+|:--------------:|:---------:|:---------------:|:----------:|
+| **Azure** | **Convert CSV to Parquet** | Virtual Machine | $1.88 |
+| | | Databricks Runtime | $5.00 |
+|||||
+| **GCP** | **Convert CSV to Parquet** | Virtual Machine | $2.00 |
+| | | Databricks Runtime | $6.15 |
+
+## Benchmark Results
 
 ### 🚀 SQL Query Optimization Results (Azure)
 
@@ -240,7 +252,7 @@ The following execution times were measured for processing the Yellow Taxi datas
 | Cloud Provider | Processing Step | Data Stage Transition | Execution Time | Details |
 |:--------------:|:---------------:|:---------------------:|:--------------:|:--------|
 | **Azure** | **Convert CSV to Parquet** | Bronze → Silver | 120min 39s | Initial data ingestion and conversion |
-| | **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 9min 29s | Create table from transform SQL run directly in cloud datawarehouse |
+| | **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 11min 28s | Create table from transform SQL run directly in cloud datawarehouse |
 | | **Materialize to Gold** | Silver → Gold | 10min | Final materialization step |
 | **GCP** | **Convert CSV to Parquet** | Bronze → Silver | 91min | Initial data ingestion and conversion |
 | | **Transform using Cloud SQL Warehouse** | Silver → Silver (transformed) | 15min 5s | Create table from transform SQL run directly in cloud datawarehouse |
@@ -250,28 +262,33 @@ The following execution times were measured for processing the Yellow Taxi datas
 
 We experimented with different transformation approaches before finding the optimal solution across both cloud platforms:
 
-#### Azure Transformation Methods
+| Cloud Provider | Transform Method | Execution Time | Details |
+|:--------------:|:----------------:|:--------------:|:--------|
+| **Azure** | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
+| | **Hybrid Spark** ([AzureTransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/azure/transform-data/AzureTransformDataYellowTaxiSpark.ipynb)) | >4 hours | Second approach with two phases: |
+| | | ~2.1 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | | ~2.3 hours | Spark-based transformation and storage write |
+| | **Databricks SQL Datawarehouse** | **11min 28s** | Final approach running SQL transformations directly in Databricks SQL |
+| | **Cloud SQL Warehouse** | N/A | Unable to run due to compute capacity exceed |
+|||||
+| **GCP** | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
+| | **Hybrid Spark** ([GCPTransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/gcp/transform-data/GCPTransformDataYellowTaxiSpark.ipynb)) | 3.5 hours | Second approach with two phases: |
+| | | 2.4 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
+| | | 1.1 hours | Spark-based transformation and storage write |
+| | **Databricks SQL Datawarehouse** | 14min 55s | Intermediate approach using Databricks SQL |
+| | **Cloud SQL Warehouse (BigQuery)** | **1min 20s** | Final approach running SQL transformations directly in BigQuery |
 
-| Transform Method | Execution Time | Details |
-|:----------------:|:--------------:|:--------|
-| **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
-| **Hybrid Spark** ([TransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/azure/transform-data/TransformDataYellowTaxiSpark.ipynb)) | >4 hours | Second approach with two phases: |
-| | ~2.1 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
-| | ~2.3 hours | Spark-based transformation and storage write |
-| **Databricks SQL Datawarehouse** | **9min 29s** | Final approach running SQL transformations directly in Databricks SQL |
+> **Note:** 
+> 
+> The dramatic performance improvements from Spark-based approaches (3.5+ hours) to SQL-based transformations demonstrate why we switched to cloud-native data warehousing solutions for these workloads.
+> 
+> In Azure, we can't run transform queries in Azure Synapse data warehouse due to compute capacity exceed. The best execution time (11min 28s) is achieved by running SQL transformations directly in Databricks SQL Data Warehouse.
+> 
+> In GCP, we can run transforms in BigQuery for optimized performance, achieving an impressive 1min 20s execution time.
 
-#### GCP Transformation Methods
+## Resources
 
-| Transform Method | Execution Time | Details |
-|:----------------:|:--------------:|:--------|
-| **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
-| **Hybrid Spark** | 3.5 hours | Second approach with two phases: |
-| | 2.4 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
-| | 1.1 hours | Spark-based transformation and storage write |
-| **Databricks SQL Datawarehouse** | 14min 55s | Intermediate approach using Databricks SQL |
-| **Cloud SQL Warehouse (BigQuery)** | **1min 20s** | Final approach running SQL transformations directly in BigQuery |
-
-> **Note:** The dramatic performance improvements from Spark-based approaches (3.5+ hours) to SQL-based transformations (9min 29s on Azure Databricks SQL, 1min 20s on GCP BigQuery) demonstrate why we switched to cloud-native data warehousing solutions for these workloads. GCP's BigQuery showed particularly impressive performance with a 160x speedup over the Hybrid Spark approach.
+> **Note:** All resources are provisioned in the asia-southeast1 region (Singapore) in both GCP and Azure.
 
 ### 💻 Computing Resources
 
@@ -295,7 +312,26 @@ The following computing environment was used for all benchmarks and data process
 | **Warehouse Name** | Serverless Starter Warehouse | Serverless type |
 | **Cluster Size** | Small | 12 DBU/h/cluster |
 | **Auto Stop** | Enabled | After 10 minutes of inactivity |
-| **Scaling** | 2-4 clusters | 24 to 48 DBU capacity range |
+| **Scaling** | 1-1 clusters | 12 to 12 DBU capacity range |
+
+### 🗄️ Storage
+
+| Cloud Provider | Storage Type | Configuration | Details |
+|:--------------:|:------------:|:-------------:|:--------|
+| **Azure** | **Azure Data Lake Storage Gen2** | Standard tier | Hierarchical namespace enabled |
+| **GCP** | **Google Cloud Storage** | Standard storage class | Non-hierarchical namespace (flatten) |
+
+## Cost Analysis
+
+We tracked the costs associated with running our data pipeline across both cloud platforms:
+
+| Cloud Provider | Operation | Compute Service | Cost (USD) |
+|:--------------:|:---------:|:---------------:|:----------:|
+| **Azure** | **Convert CSV to Parquet** | Virtual Machine | $1.88 |
+| | | Databricks Runtime | $5.00 |
+|||||
+| **GCP** | **Convert CSV to Parquet** | Virtual Machine | $2.00 |
+| | | Databricks Runtime | $6.15 |
 
 ## Project Structure
 
