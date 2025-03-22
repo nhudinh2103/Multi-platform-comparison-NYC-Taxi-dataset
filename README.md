@@ -1,8 +1,47 @@
 # NYC Taxi Data Analytics with Databricks
 
+## Table of Contents
+- [Overview](#overview)
+- [Modifications from Original Workshop](#modifications-from-original-workshop)
+  - [Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
+  - [Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
+  - [Optimize Transformation Query for Big Dataset (Yellow Taxi)](#-optimize-transformation-query-for-big-dataset-yellow-taxi)
+  - [Additional Enhancements](#additional-enhancements)
+- [Architecture](#architecture)
+  - [High-Level Architecture](#high-level-architecture)
+  - [Batch Ingestion Flow](#batch-ingestion-flow)
+  - [Storage Layer Details](#storage-layer-details)
+- [Setup](#setup)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Additional Setup Resources](#additional-setup-resources)
+  - [Local Development to Databricks Synchronization](#local-development-to-databricks-synchronization)
+- [Dataset Statistics](#dataset-statistics)
+  - [Trip Data](#trip-data)
+  - [Reference Data](#reference-data)
+  - [Data Growth by Year](#data-growth-by-year)
+  - [Storage Container Sizes](#storage-container-sizes)
+- [Cost Analysis](#cost-analysis)
+  - [Key Cost Considerations for Databricks Clusters](#key-cost-considerations-for-databricks-clusters)
+- [Benchmark Results](#benchmark-results)
+  - [SQL Query Optimization Results (Azure)](#-sql-query-optimization-results-azure)
+  - [Data Pipeline Execution Times (Yellow Taxi)](#-data-pipeline-execution-times-yellow-taxi)
+  - [Transform Method Evolution](#-transform-method-evolution)
+- [Resources](#resources)
+  - [Computing Resources](#-computing-resources)
+  - [Storage](#-storage)
+- [Cost Analysis](#cost-analysis-1)
+- [Project Structure](#project-structure)
+- [Delta Lake](#delta-lake)
+  - [Troubleshooting](#troubleshooting)
+  - [Best Practices](#best-practices)
+- [Future Enhancements](#future-enhancements)
+
+## Overview
+
 An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks across different cloud vendors to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop)  with significant performance improvements by replacing Spark transformations with SQL Cloud Data Warehouse, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
 
-Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform’s native services for storage, data warehousing, and secret management.
+Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management.
 
 ## Modifications from Original Workshop
 
@@ -63,17 +102,36 @@ Provides the environment for data transformation and querying for reporting and 
 - Azure: **Azure Synapse**
 - GCP: **Google BigQuery**
 
-### Batch Ingestion Flow
+### Data Ingestion Flow
 
-![Batch Ingestion Flow](images/batch-ingestion-flow.png)
+#### Batch Ingestion
 
-#### Storage Layer Details
+##### Azure
 
-| Layer | Format | Purpose | Example Tables |
-|-------|--------|---------|---------------|
-| **Bronze** | CSV | Raw data storage | yellow_taxi_trips_raw, green_taxi_trips_raw |
-| **Silver** | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta), green_taxi_trips_transform (Delta) |
-| **Gold** | Delta Lake | Analytics-ready data | taxi_trips_mat_view |
+###### High Level Diagram
+![Azure Batch Ingestion Flow](images/azure-batch-ingestion-flow.png)
+
+###### Storage Layer Details
+
+| Layer | Storage Type | Format | Purpose | Example Tables |
+|-------|-------------|--------|---------|---------------|
+| **Bronze** | Cloud Object Storage | CSV | Raw data storage | yellow_taxi_trips_raw, green_taxi_trips_raw |
+| **Silver** | Cloud Object Storage | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta) |
+| **Gold** | Cloud Object Storage | Delta Lake | Analytics-ready data | taxi_trips_mat_view |
+
+##### GCP
+
+###### High Level Diagram
+![GCP Batch Ingestion Flow](images/gcp-batch-ingestion-flow.png)
+
+###### Storage Layer Details
+
+| Layer | Storage Type | Format | Purpose | Example Tables |
+|-------|-------------|--------|---------|---------------|
+| **Bronze** | Cloud Object Storage | CSV | Raw data storage | yellow_taxi_trips_raw, green_taxi_trips_raw |
+| **Silver** | BigQuery Table | N/A | Processed data | taxi_zone_lookup, yellow_taxi_trips_transform |
+| **Gold** | BigQuery Table | N/A | Analytics-ready data | taxi_trips_mat_view |
+
 
 ## Setup
 
@@ -421,6 +479,61 @@ Each component in this structure serves a specific purpose in the data pipeline:
 - **SQL Scripts**: Separated by cloud provider and execution environment (Databricks/BigQuery)
 - **Utility Scripts**: For conversion between notebook formats and synchronization with Databricks
 - **Configuration Files**: For project settings and environment setup
+
+## Delta Lake
+
+### Troubleshooting
+
+When working with Delta Lake tables across different environments (Databricks and BigQuery), you may encounter these common issues:
+
+**Metadata Schema Errors in BigQuery**
+
+If you encounter an error like this when reading Delta Lake tables in BigQuery:
+```
+Error while reading table: green_taxi_trips_raw, error message: Failed to find the required variable metaData.partitionColumns.list.element in the delta lake checkpoint schema.
+```
+
+Fix by running this command in Databricks:
+```sql
+ALTER TABLE <table_name> SET TBLPROPERTIES ('delta.minReaderVersion' = '3', 'delta.minWriterVersion' = '7');
+```
+
+**Missing or Deleted Files Errors**
+
+If you encounter errors about missing or deleted files after running Spark write operations in a table folder:
+
+Fix by running this command in Databricks:
+```sql
+FSCK REPAIR TABLE <table_name>;
+```
+
+### Best Practices
+
+Based on [Databricks Delta Lake best practices](https://docs.databricks.com/aws/en/delta/best-practices), here are key recommendations for working with Delta Lake:
+
+**Table Creation and Management**
+- Always use `CREATE OR REPLACE TABLE` statements rather than deleting and recreating tables
+- Use liquid clustering rather than partitioning, Z-order, or other data organization strategies to optimize data layout for data skipping
+- Compact small files into larger ones to improve read throughput using the `OPTIMIZE` command
+
+**Table Modification**
+- Avoid deleting the entire directory of a Delta table and creating a new table on the same path
+  - Deleting directories is inefficient and can take hours for large tables
+  - Directory deletion is not atomic, potentially causing inconsistent query results
+  - Instead, use `TRUNCATE TABLE` to remove all data or `OVERWRITE` mode when writing to a Delta table
+
+**Performance Optimization**
+- Use the `VACUUM` command to clean up old files after table operations
+- For Delta Lake merge operations:
+  - Reduce the search space for matches by adding partition predicates
+  - Use optimized writes with `dataFrameWriter.option("optimizeWrite", "true")`
+  - Compact small files to improve read throughput
+
+**Delta Lake vs. Parquet Differences**
+- Delta Lake automatically handles metadata refreshing, unlike Parquet which requires manual `REFRESH TABLE`
+- Delta Lake automatically tracks partitions, eliminating the need for `ALTER TABLE ADD/DROP PARTITION`
+- Delta Lake provides predicate pushdown optimization without manual configuration
+- Never manually modify Delta Lake files; use the transaction log to commit changes
 
 ## Future Enhancements
 
