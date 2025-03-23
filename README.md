@@ -385,7 +385,7 @@ The following computing environment was used for all benchmarks and data process
 | | **Runtime Version** | 16.2 | Apache Spark 3.5.2, Scala 2.12 |
 | | **Node Type** | n2-highmem-8 | 64 GB Memory, 8 Cores |
 
-###### SQL Warehouse
+##### SQL Warehouse
 
 | Resource Type | Specification | Details |
 |:-------------:|:-------------:|:--------|
