@@ -41,9 +41,9 @@
 
 ## Overview
 
-An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks across different cloud vendors to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop)  with significant performance improvements by replacing Spark transformations with SQL Cloud Data Warehouse, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
+An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks and Snowflake across different cloud vendors to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with SQL Cloud Data Warehouse, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
 
-Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management.
+Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management. The project also includes a performance comparison between Databricks and Snowflake for data transformation and materialization tasks.
 
 ## Modifications from Original Workshop
 
@@ -325,14 +325,16 @@ We conducted performance testing on complex join operations between taxi trip da
 
 The following execution times were measured for processing the Yellow Taxi dataset (the largest dataset with 1.37B records) through the medallion architecture:
 
-| Cloud Provider | Processing Step | Data Stage Transition | Execution Time | Details |
-|:--------------:|:---------------:|:---------------------:|:--------------:|:--------|
-| **Azure** | **Convert CSV to Parquet** | Bronze → Silver | 120min 39s | Initial data ingestion and conversion |
-| | **Transform** | Silver → Silver (transformed) | 11min 28s | Create table from transform SQL run in Databricks SQL Warehouse |
-| | **Materialize** | Silver → Gold | 14min 26s | Final materialization step in Databricks SQL Warehouse |
-| **GCP** | **Convert CSV to Parquet** | Bronze → Silver | 91min | Initial data ingestion and conversion |
-| | **Transform** | Silver → Silver (transformed) | 1min 37s | Create table from transform SQL run in Cloud SQL Warehouse (BigQuery) |
-| | **Materialize** | Silver → Gold | 1min 3s | Final materialization step in Cloud SQL Warehouse (BigQuery) |
+| Platform | Cloud Provider | Processing Step | Data Stage Transition | Execution Time | Details |
+|:--------:|:--------------:|:---------------:|:---------------------:|:--------------:|:--------|
+| Databricks | **Azure** | **Convert CSV to Parquet** | Bronze → Silver | 120min 39s | Initial data ingestion and conversion |
+| | | **Transform** | Silver → Silver (transformed) | 11min 28s | Create table from transform SQL run in Databricks SQL Warehouse |
+| | | **Materialize** | Silver → Gold | 14min 26s | Final materialization step in Databricks SQL Warehouse |
+| Databricks | **GCP** | **Convert CSV to Parquet** | Bronze → Silver | 91min | Initial data ingestion and conversion |
+| | | **Transform** | Silver → Silver (transformed) | 1min 37s | Create table from transform SQL run in Cloud SQL Warehouse (BigQuery) |
+| | | **Materialize** | Silver → Gold | 1min 3s | Final materialization step in Cloud SQL Warehouse (BigQuery) |
+| Snowflake | **GCP** | **Transform** | Silver → Silver (transformed) | 26min 41s | Create table from transform SQL run in Snowflake |
+| | | **Materialize** | Silver → Gold | 23min 54s | Final materialization step in Snowflake |
 
 ### 🔄 Transform Method Evolution
 
@@ -370,7 +372,9 @@ We experimented with different transformation approaches before finding the opti
 
 The following computing environment was used for all benchmarks and data processing:
 
-#### Databricks Compute Cluster
+#### Databricks
+
+##### Compute Cluster
 
 | Cloud Provider | Resource Type | Specification | Details |
 |:--------------:|:-------------:|:-------------:|:--------|
@@ -381,7 +385,7 @@ The following computing environment was used for all benchmarks and data process
 | | **Runtime Version** | 16.2 | Apache Spark 3.5.2, Scala 2.12 |
 | | **Node Type** | n2-highmem-8 | 64 GB Memory, 8 Cores |
 
-#### SQL Warehouse
+###### SQL Warehouse
 
 | Resource Type | Specification | Details |
 |:-------------:|:-------------:|:--------|
@@ -389,6 +393,17 @@ The following computing environment was used for all benchmarks and data process
 | **Cluster Size** | Small | 12 DBU/h/cluster |
 | **Auto Stop** | Enabled | After 10 minutes of inactivity |
 | **Scaling** | 1-1 clusters | 12 to 12 DBU capacity range |
+
+#### Snowflake
+
+##### Compute Warehouse
+
+| Specification | Details |
+|---------------|---------|
+| **Size** | Medium |
+| **Type** | Snowpark-optimized |
+| **Resource Constraint** | MEMORY_16X |
+| **Compute Resources** | 32 GB Memory, 8 cores per node, 4 nodes (total: 256 GB Memory, 32 cores) |
 
 ### 🗄️ Storage
 
