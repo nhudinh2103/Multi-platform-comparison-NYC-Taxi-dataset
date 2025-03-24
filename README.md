@@ -2,6 +2,9 @@
 
 ## Table of Contents
 - [Overview](#overview)
+  - [Performance and Cost Visualizations](#performance-and-cost-visualizations)
+    - [Cost Comparison Charts](#cost-comparison-charts)
+    - [Performance Comparison Charts](#performance-comparison-charts)
 - [Modifications from Original Workshop](#modifications-from-original-workshop)
   - [Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
   - [Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
@@ -32,7 +35,6 @@
 - [Resources](#resources)
   - [Computing Resources](#-computing-resources)
   - [Storage](#-storage)
-- [Cost Analysis](#cost-analysis-1)
 - [Project Structure](#project-structure)
 - [Delta Lake](#delta-lake)
   - [Troubleshooting](#troubleshooting)
@@ -44,6 +46,48 @@
 An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks and Snowflake across different cloud vendors to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with SQL Cloud Data Warehouse, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
 
 Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management. The project also includes a performance comparison between Databricks and Snowflake for data transformation and materialization tasks.
+
+### Performance and Cost Visualizations
+
+This section provides visual representations of the performance and cost metrics for our NYC Taxi data processing pipeline across different cloud platforms.
+
+#### Cost Comparison Charts
+
+##### Overall Cost Comparison (Excluding Network Costs)
+
+![Cost Comparison Pie Chart](images/comparison/cost-comparison-pie.png)
+
+Azure's total cost per run is significantly lower than GCP's when excluding network/egress costs, which can vary significantly based on implementation details.
+
+##### Detailed Cost Breakdown by Provider
+
+![Azure Cost Breakdown](images/comparison/azure-cost-breakdown.png)
+
+Azure's costs are primarily driven by compute resources, particularly the Databricks cluster which accounts for the majority of the expenses.
+
+![GCP Cost Breakdown](images/comparison/gcp-cost-breakdown.png)
+
+GCP's cost structure shows more diversity, with significant portions going to network egress, Databricks cluster, and BigQuery transform operations.
+
+#### Performance Comparison Charts
+
+##### Overall Performance Comparison
+
+![Performance Comparison Bar Chart](images/comparison/performance-comparison-bar.png)
+
+GCP outperforms Azure in total execution time, completing the entire pipeline in approximately 94 minutes compared to Azure's 147 minutes.
+
+##### Detailed Performance Breakdown
+
+![Performance Breakdown Bar Chart](images/comparison/performance-breakdown-bar.png)
+
+The detailed breakdown shows that while both platforms have similar patterns (with data conversion taking the most time), GCP significantly outperforms Azure in the transformation and materialization steps.
+
+##### Transform and Materialize Performance
+
+![Transform and Materialize Comparison](images/comparison/transform-materialize-comparison.png)
+
+This zoomed-in view highlights the dramatic performance difference in the transformation and materialization steps, where GCP's BigQuery shows substantial advantages over Azure's Databricks SQL Warehouse.
 
 ## Modifications from Original Workshop
 
@@ -259,60 +303,41 @@ The project processes a massive volume of NYC Taxi data:
 
 We tracked the costs associated with running our data pipeline across both cloud platforms:
 
-| Cloud Provider | Operation | Compute Service | Cost (USD) |
-|:--------------:|:---------:|:---------------:|:----------:|
-| **Azure** | **Convert CSV to Parquet** | Virtual Machine | $1.88 |
-| | | Databricks Runtime | $5.00 |
+| Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
+|:--------------:|:-------------:|:---------:|:-------:|:----------:|
+| **Azure** | **Storage** | Daily Storage | Azure Data Lake | $1.39/day |
+| | **Network** | Data Transfer | Azure Data Factory | $2.66/run |
+| | **Compute** | Convert CSV to Parquet | VM Instance | $1.88/run |
+| | | | Databricks Cluster Spark Computing | $11.10/run |
+| | | Transform Data | Databricks SQL Warehouse | Updating |
 |||||
-| **GCP** | **Convert CSV to Parquet** | Virtual Machine | $2.00 |
-| | | Databricks Runtime | $6.15 |
+| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | $0.67/day |
+| | **Network** | Data Egress | Storage Transfer | $12.98/run |
+| | **Compute** | Convert CSV to Parquet | VM Instance | $2.60/run |
+| | | | Databricks Cluster Spark Computing | $14.22/run |
+| | | Transform Data | BigQuery | $7.84/run |
 
-### Key Cost Considerations for Databricks Clusters
+### Key Cost Insights
 
-When provisioning Databricks computing clusters, consider these cost-optimization factors:
+- **Storage Cost Comparison**: Azure storage costs ($1.39/day) are approximately twice as expensive as GCP storage ($0.67/day) for similar workloads and data volumes.
+  
+- **Data Egress Considerations**: When ingesting data, be mindful of egress charges when moving data between different cloud vendors. These charges can be significant ($12.98/run in our GCP implementation) and should be avoided when possible by keeping data processing within a single cloud ecosystem.
 
-- **Spot Instances**: Evaluate whether to use spot instances for significant cost savings on non-critical workloads.
-  
-- **Photon Engine**: Enable the Photon engine to optimize Spark SQL performance. This significantly impacts DBU pricing - for example, an n2-highmem-4 instance costs 1.96 DBU/hour with Photon versus 0.96 DBU/hour without Photon.
-  
-- **Compute Type Selection**: Choose the appropriate compute type based on your workload requirements:
-  - All-purpose compute: For interactive development
-  - Job compute: For scheduled production workloads
-  - SQL compute: For data warehousing operations
-  - SQL serverless: For on-demand query processing
-  
-Each option offers different pricing models and performance characteristics.
+### Key Observations
+
+1. **Cost vs. Performance Tradeoff**: 
+   - Azure offers lower overall cost but slower performance
+   - GCP provides faster processing but at a higher cost
+
+2. **Transformation Speed**: 
+   - GCP's BigQuery significantly outperforms Azure's Databricks SQL Warehouse for transformation tasks (1.62 min vs. 11.47 min)
+   - GCP's materialization is also much faster (1.05 min vs. 14.43 min)
+
+3. **Cost Structure Differences**:
+   - Azure's costs are dominated by compute (Databricks cluster)
+   - GCP's costs are heavily influenced by network egress charges
 
 ## Benchmark Results
-
-### 🚀 SQL Query Optimization Results (Azure)
-
-We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques on Azure Databricks. The benchmark query ([1-join-yellow-taxi.sql](Workspace/CarsProject/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
-
-#### Optimization Techniques Tested
-
-1. **Original vs. Union Query**: 
-   - Original: Standard join approach
-   - Union: Alternative implementation using UNION ALL to combine results
-
-2. **BROADCAST Join Hint**:
-   - Explicitly tells the query optimizer to broadcast smaller tables to all nodes
-
-#### Performance Results
-
-**Full Dataset Query (Complete Results)**
-
-| Approach | Without BROADCAST | With BROADCAST | Improvement |
-|:--------:|:-----------------:|:--------------:|:-----------:|
-| Original Query | 23min 57s | 21min 27s | 10% faster |
-| Union Query | 21min 16s | **13min 14s** | **45% faster** |
-
-**Limited Dataset Query (LIMIT 1000)**
-
-| Approach | Without BROADCAST | With BROADCAST | Improvement |
-|:--------:|:-----------------:|:--------------:|:-----------:|
-| Original Query | 8min 47s | 20.117s | 96% faster |
-| Union Query | 9min 22s | **19.586s** | 96% faster |
 
 #### Key Findings
 
@@ -368,6 +393,35 @@ We experimented with different transformation approaches before finding the opti
 
 > **Note:** All resources are provisioned in the asia-southeast1 region (Singapore) in both GCP and Azure.
 
+### 🚀 SQL Query Optimization Results (Azure)
+
+We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques on Azure Databricks. The benchmark query ([1-join-yellow-taxi.sql](Workspace/CarsProject/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
+
+#### Optimization Techniques Tested
+
+1. **Original vs. Union Query**: 
+   - Original: Standard join approach
+   - Union: Alternative implementation using UNION ALL to combine results
+
+2. **BROADCAST Join Hint**:
+   - Explicitly tells the query optimizer to broadcast smaller tables to all nodes
+
+#### Performance Results
+
+**Full Dataset Query (Complete Results)**
+
+| Approach | Without BROADCAST | With BROADCAST | Improvement |
+|:--------:|:-----------------:|:--------------:|:-----------:|
+| Original Query | 23min 57s | 21min 27s | 10% faster |
+| Union Query | 21min 16s | **13min 14s** | **45% faster** |
+
+**Limited Dataset Query (LIMIT 1000)**
+
+| Approach | Without BROADCAST | With BROADCAST | Improvement |
+|:--------:|:-----------------:|:--------------:|:-----------:|
+| Original Query | 8min 47s | 20.117s | 96% faster |
+| Union Query | 9min 22s | **19.586s** | 96% faster |
+
 ### 💻 Computing Resources
 
 The following computing environment was used for all benchmarks and data processing:
@@ -394,6 +448,22 @@ The following computing environment was used for all benchmarks and data process
 | **Auto Stop** | Enabled | After 10 minutes of inactivity |
 | **Scaling** | 1-1 clusters | 12 to 12 DBU capacity range |
 
+##### Provision notes for cost optimizing
+
+When provisioning Databricks computing clusters, consider these cost-optimization factors:
+
+- **Spot Instances**: Evaluate whether to use spot instances for significant cost savings on non-critical workloads.
+  
+- **Photon Engine**: Enable the Photon engine to optimize Spark SQL performance. This significantly impacts DBU pricing - for example, an n2-highmem-4 instance costs 1.96 DBU/hour with Photon versus 0.96 DBU/hour without Photon.
+  
+- **Compute Type Selection**: Choose the appropriate compute type based on your workload requirements:
+  - All-purpose compute: For interactive development
+  - Job compute: For scheduled production workloads
+  - SQL compute: For data warehousing operations
+  - SQL serverless: For on-demand query processing
+  
+Each option offers different pricing models and performance characteristics.
+
 #### Snowflake
 
 ##### Compute Warehouse
@@ -411,18 +481,6 @@ The following computing environment was used for all benchmarks and data process
 |:--------------:|:------------:|:-------------:|:--------|
 | **Azure** | **Azure Data Lake Storage Gen2** | Standard tier | Hierarchical namespace enabled |
 | **GCP** | **Google Cloud Storage** | Standard storage class | Non-hierarchical namespace (flatten) |
-
-## Cost Analysis
-
-We tracked the costs associated with running our data pipeline across both cloud platforms:
-
-| Cloud Provider | Operation | Compute Service | Cost (USD) |
-|:--------------:|:---------:|:---------------:|:----------:|
-| **Azure** | **Convert CSV to Parquet** | Virtual Machine | $1.88 |
-| | | Databricks Runtime | $5.00 |
-|||||
-| **GCP** | **Convert CSV to Parquet** | Virtual Machine | $2.00 |
-| | | Databricks Runtime | $6.15 |
 
 ## Project Structure
 
