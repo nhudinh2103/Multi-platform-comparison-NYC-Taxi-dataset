@@ -105,12 +105,6 @@ Extended data processing from the original 2016-2017 range to include all NYC ta
 
 Added query optimization techniques (by using BROADCAST join hint and UNION ALL query approach) for better performance and ad-hoc queries on the large Yellow Taxi dataset (1.37B records)
 
-### Additional Enhancements
-
-- Added utilities for converting between Databricks and Jupyter notebook formats
-- Implemented synchronization scripts for notebooks and SQL files
-- Added support for local development with VSCode
-
 ## Architecture
 
 ### High-Level Architecture
