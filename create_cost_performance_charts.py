@@ -88,29 +88,33 @@ plt.savefig('images/comparison/gcp-cost-breakdown.png', dpi=300, bbox_inches='ti
 plt.close()
 
 # Create performance comparison bar chart (total time)
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 8))  # Increased height for more space
 x = np.arange(len(labels))
 width = 0.35
 
 # Use more distinct colors for better differentiation
 bar_colors = ['#0078D4', '#EA4335']  # Azure blue, Google red
-plt.bar(x, [azure_total_time, gcp_total_time], width, color=bar_colors)
+bars = plt.bar(x, [azure_total_time, gcp_total_time], width, color=bar_colors)
 plt.xlabel('Cloud Provider', fontsize=14)
 plt.ylabel('Total Execution Time (Minutes)', fontsize=14)
 plt.title('Performance Comparison: Azure vs GCP (Total Minutes)', fontsize=16)
 plt.xticks(x, labels, fontsize=12)
 plt.yticks(fontsize=12)
 
+# Set y-axis limit to leave more room for labels
+max_value = max(azure_total_time, gcp_total_time)
+plt.ylim(0, max_value * 1.2)  # Add 20% more space at the top
+
 # Add value labels on top of bars
 for i, v in enumerate([azure_total_time, gcp_total_time]):
-    plt.text(i, v + 5, f"{v:.2f}", ha='center', fontsize=12)
+    plt.text(i, v + (max_value * 0.03), f"{v:.2f}", ha='center', fontsize=12)
 
 plt.tight_layout()
 plt.savefig('images/comparison/performance-comparison-bar.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create detailed performance breakdown bar chart
-plt.figure(figsize=(12, 7))
+plt.figure(figsize=(12, 9))  # Increased height for more space
 x = np.arange(3)  # 3 operations
 width = 0.35
 
@@ -129,11 +133,16 @@ plt.xticks(x, ['Convert CSV to Parquet', 'Transform', 'Materialize'], fontsize=1
 plt.yticks(fontsize=12)
 plt.legend(fontsize=12)
 
+# Set y-axis limit to leave more room for labels
+max_value = max(azure_convert, azure_transform, azure_materialize, 
+                gcp_convert, gcp_transform, gcp_materialize)
+plt.ylim(0, max_value * 1.15)  # Add 15% more space at the top
+
 # Add value labels on top of bars
 for i, bars in enumerate([azure_bars, gcp_bars]):
     for bar in bars:
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height + 2,
+        plt.text(bar.get_x() + bar.get_width()/2., height + (max_value * 0.02),
                 f"{height:.2f}", ha='center', va='bottom', fontsize=10)
 
 plt.tight_layout()
@@ -141,7 +150,7 @@ plt.savefig('images/comparison/performance-breakdown-bar.png', dpi=300, bbox_inc
 plt.close()
 
 # Create a zoomed-in version for transform and materialize steps (excluding the convert step)
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 7))  # Increased height for more space
 x = np.arange(2)  # 2 operations (transform and materialize)
 width = 0.35
 
@@ -160,11 +169,15 @@ plt.xticks(x, ['Transform', 'Materialize'], fontsize=12)
 plt.yticks(fontsize=12)
 plt.legend(fontsize=12)
 
+# Set y-axis limit to leave more room for labels
+max_value = max(azure_transform, azure_materialize, gcp_transform, gcp_materialize)
+plt.ylim(0, max_value * 1.3)  # Add 30% more space at the top for this chart
+
 # Add value labels on top of bars
 for i, bars in enumerate([azure_bars, gcp_bars]):
     for bar in bars:
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height + 0.5,
+        plt.text(bar.get_x() + bar.get_width()/2., height + (max_value * 0.05),
                 f"{height:.2f}", ha='center', va='bottom', fontsize=10)
 
 plt.tight_layout()
