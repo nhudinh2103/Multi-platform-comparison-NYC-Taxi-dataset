@@ -73,19 +73,19 @@ GCP's cost structure shows more diversity, with significant portions going to ne
 
 ##### Overall Performance Comparison
 
-![Performance Comparison Bar Chart](images/comparison/performance-comparison-bar.png1)
+![Performance Comparison Bar Chart](images/comparison/performance-comparison-bar.png)
 
 GCP outperforms Azure in total execution time, completing the entire pipeline in approximately 94 minutes compared to Azure's 147 minutes.
 
 ##### Detailed Performance Breakdown
 
-![Performance Breakdown Bar Chart](images/comparison/performance-breakdown-bar.png1)
+![Performance Breakdown Bar Chart](images/comparison/performance-breakdown-bar.png)
 
 The detailed breakdown shows that while both platforms have similar patterns (with data conversion taking the most time), GCP significantly outperforms Azure in the transformation and materialization steps.
 
 ##### Transform and Materialize Performance
 
-![Transform and Materialize Comparison](images/comparison/transform-materialize-comparison.png1)
+![Transform and Materialize Comparison](images/comparison/transform-materialize-comparison.png)
 
 This zoomed-in view highlights the dramatic performance difference in the transformation and materialization steps, where GCP's BigQuery shows substantial advantages over Azure's Databricks SQL Warehouse.
 
