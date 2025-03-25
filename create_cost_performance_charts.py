@@ -22,8 +22,10 @@ gcp_transform_cost = 7.84  # BigQuery transform cost per run
 gcp_transform_databricks_cost = 2.7  # Databricks SQL Warehouse cost per run
 
 # Snowflake costs
+snowflake_storage_cost = 0.128  # daily snowflake storage cost
 snowflake_egress_gcp_cost = 6.37  # egress copy from GCP cost per run
 snowflake_transform_cost = 30.0  # transform data cost per run
+
 
 # Calculate total costs (including copy data/egress)
 azure_total_with_copy_data_cost = azure_storage_cost + azure_copy_data_cost + azure_compute_vm_cost + azure_compute_databricks_cost

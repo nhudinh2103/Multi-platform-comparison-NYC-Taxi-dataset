@@ -1,3 +1,7 @@
+# Multi-platform-comparison-NYC-Taxi-dataset
+
+A multi-platform comparison project analyzing NYC Taxi data (1.4B+ records) across Databricks, BigQuery, and Snowflake on different cloud providers (Azure, GCP) to benchmark performance and cost efficiency for large-scale data processing workloads.
+
 # NYC Taxi Data Analytics: Multi-Platform Comparison (Databricks, BigQuery, Snowflake)
 
 ## Table of Contents
@@ -122,10 +126,6 @@ Provides the environment for data transformation and querying for reporting and 
 
 ###### High Level Diagram
 ![Azure Batch Ingestion Flow](images/azure-batch-ingestion-flow.png)
-
-###### Storage Layer Details
-
-| Layer | Storage Type | Format | Purpose | Example Tables |
 |-------|-------------|--------|---------|---------------|
 | **Bronze** | Cloud Object Storage | CSV | Raw data storage | yellow_taxi_trips_raw, green_taxi_trips_raw |
 | **Silver** | Cloud Object Storage | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta) |
@@ -329,9 +329,10 @@ We tracked the costs associated with running our data pipeline across both cloud
 | | **TOTAL (with BigQuery)** | | | **$38.31/run** + $0.67/day |
 | | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + $0.67/day |
 |||||
-| **Snowflake** | **Copy Data** | Egress Copy from GCP | Snowflake | $6.37/run |
+| **Snowflake** | **Storage** | Daily Storage | Snowflake GCP | $0.128/day |
+| | **Copy Data** | Egress Copy from GCP | Snowflake | $6.37/run |
 | | **Compute** | Transform Data | Snowflake | $30.00/run |
-| | **TOTAL** | | | **$36.37/run** |
+| | **TOTAL** | | | **$36.37/run** + $0.128/day |
 
 ### Key Cost Insights
 
@@ -341,7 +342,9 @@ We tracked the costs associated with running our data pipeline across both cloud
   - **GCP with BigQuery** costs **$38.31/run** (plus daily storage)
   - **Snowflake** costs **$36.37/run**
 
-- **Storage Cost Comparison**: Azure storage costs ($1.39/day) are approximately twice as expensive as GCP storage ($0.67/day) for similar workloads and data volumes.
+- **Storage Cost Comparison**: 
+  - Azure storage costs ($1.39/day) are approximately twice as expensive as GCP storage ($0.67/day) for similar workloads and data volumes
+  - Snowflake GCP charges $20/TB/month, with our dataset (silver + gold) taking 194.1GB resulting in a storage cost of $3.88/month (approximately $0.128/day)
   
 - **Copy Data Considerations**: When ingesting data, be mindful of data copy/egress charges when moving data between different cloud vendors. These charges can be significant ($12.98/run in our GCP implementation) and should be avoided when possible by keeping data processing within a single cloud ecosystem.
 
