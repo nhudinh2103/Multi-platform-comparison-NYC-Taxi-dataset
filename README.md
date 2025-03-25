@@ -10,7 +10,7 @@
     - [Performance Comparison Charts](#performance-comparison-charts)
       - [Overall Performance Comparison](#overall-performance-comparison)
       - [Detailed Performance Breakdown](#detailed-performance-breakdown)
-- [Modifications from Original Workshop](#modifications-from-original-workshop)
+- [Modifications from  Original Workshop](#modifications-from-original-workshop)
   - [Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
   - [Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
   - [Optimize Transformation Query for Big Dataset (Yellow Taxi)](#-optimize-transformation-query-for-big-dataset-yellow-taxi)
@@ -421,10 +421,6 @@ We experimented with different transformation approaches before finding the opti
 > 
 > In GCP, we can run transforms in BigQuery for optimized performance, achieving an impressive 1min 20s execution time.
 
-## Resources
-
-> **Note:** All resources are provisioned in the asia-southeast1 region (Singapore) in both GCP and Azure.
-
 ### 🚀 SQL Query Optimization Results (Azure)
 
 We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques on Azure Databricks. The benchmark query ([1-join-yellow-taxi.sql](Workspace/CarsProject/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
@@ -453,6 +449,10 @@ We conducted performance testing on complex join operations between taxi trip da
 |:--------:|:-----------------:|:--------------:|:-----------:|
 | Original Query | 8min 47s | 20.117s | 96% faster |
 | Union Query | 9min 22s | **19.586s** | 96% faster |
+
+## Resources
+
+> **Note:** All resources are provisioned in the asia-southeast1 region (Singapore) in both GCP and Azure.
 
 ### 💻 Computing Resources
 
@@ -594,3 +594,57 @@ Each component in this structure serves a specific purpose in the data pipeline:
 When working with Delta Lake tables across different environments (Databricks and BigQuery), you may encounter these common issues:
 
 **Metadata Schema Errors in BigQuery**
+
+If you encounter an error like this when reading Delta Lake tables in BigQuery:
+```
+Error while reading table: green_taxi_trips_raw, error message: Failed to find the required variable metaData.partitionColumns.list.element in the delta lake checkpoint schema.
+```
+
+Fix by running this command in Databricks:
+```sql
+ALTER TABLE <table_name> SET TBLPROPERTIES ('delta.minReaderVersion' = '3', 'delta.minWriterVersion' = '7');
+```
+
+**Missing or Deleted Files Errors**
+
+If you encounter errors about missing or deleted files after running Spark write operations in a table folder:
+
+Fix by running this command in Databricks:
+```sql
+FSCK REPAIR TABLE <table_name>;
+```
+
+### Best Practices
+
+Based on [Databricks Delta Lake best practices](https://docs.databricks.com/aws/en/delta/best-practices), here are key recommendations for working with Delta Lake:
+
+**Table Creation and Management**
+- Always use `CREATE OR REPLACE TABLE` statements rather than deleting and recreating tables
+- Use liquid clustering rather than partitioning, Z-order, or other data organization strategies to optimize data layout for data skipping
+- Compact small files into larger ones to improve read throughput using the `OPTIMIZE` command
+
+**Table Modification**
+- Avoid deleting the entire directory of a Delta table and creating a new table on the same path
+  - Deleting directories is inefficient and can take hours for large tables
+  - Directory deletion is not atomic, potentially causing inconsistent query results
+  - Instead, use `TRUNCATE TABLE` to remove all data or `OVERWRITE` mode when writing to a Delta table
+
+**Performance Optimization**
+- Use the `VACUUM` command to clean up old files after table operations
+- For Delta Lake merge operations:
+  - Reduce the search space for matches by adding partition predicates
+  - Use optimized writes with `dataFrameWriter.option("optimizeWrite", "true")`
+  - Compact small files to improve read throughput
+
+**Delta Lake vs. Parquet Differences**
+- Delta Lake automatically handles metadata refreshing, unlike Parquet which requires manual `REFRESH TABLE`
+- Delta Lake automatically tracks partitions, eliminating the need for `ALTER TABLE ADD/DROP PARTITION`
+- Delta Lake provides predicate pushdown optimization without manual configuration
+- Never manually modify Delta Lake files; use the transaction log to commit changes
+
+## Future Enhancements
+
+- **Implement Airflow Orchestration**: Automate and schedule Spark jobs and SQL transformations with Apache Airflow for improved workflow management
+- **Adopt dbt for SQL Transformations**: Leverage dbt (data build tool) for better management, testing, and documentation of SQL transformation scripts
+- **Establish CI/CD Pipeline**: Set up automated testing and deployment workflows to ensure code quality and streamline releases
+- **Conduct Cloud Provider Comparison**: Evaluate Azure against other cloud platforms (AWS, GCP) for cost-effectiveness and performance benchmarks
