@@ -63,13 +63,7 @@ This section provides visual representations of the performance and cost metrics
 
 ![Cost Comparison Pie Chart](images/comparison/cost-comparison-pie.png)
 
-Azure's total cost per run is significantly lower than GCP's when excluding network/egress costs, which can vary significantly based on implementation details.
-
-##### Transform Cost Comparison Across Platforms
-
-![Transform Cost Comparison](images/comparison/transform-cost-comparison.png)
-
-This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $30.00/run.
+This chart compares the total cost per run across different platforms, excluding network/egress costs. Azure offers the lowest cost at $19.16/run, while GCP costs vary depending on the transform option used: $38.31/run with BigQuery (left) or $33.17/run with Databricks SQL Warehouse (right).
 
 ##### Detailed Cost Breakdown by Provider
 
@@ -79,7 +73,13 @@ Azure's costs are primarily driven by compute resources, particularly the Databr
 
 ![GCP Cost Breakdown](images/comparison/gcp-cost-breakdown.png)
 
-GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to network egress and Databricks cluster, but differ in their transform costs.
+GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to network egress and computing (CSV to parquet conversion), but differ in their transform costs.
+
+##### Transform Cost Comparison Across Platforms
+
+![Transform Cost Comparison](images/comparison/transform-cost-comparison.png)
+
+This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $30.00/run.
 
 #### Performance Comparison Charts
 

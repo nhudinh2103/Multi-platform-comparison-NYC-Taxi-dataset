@@ -53,28 +53,60 @@ gcp_materialize = 1.05  # Materialize (1min 3s)
 azure_total_time = azure_convert + azure_transform + azure_materialize
 gcp_total_time = gcp_convert + gcp_transform + gcp_materialize
 
-# Create cost comparison pie chart (excluding network/egress costs)
-plt.figure(figsize=(10, 6))
-labels = ['Azure', 'GCP']
-sizes = [azure_total, gcp_total]
-colors = ['#0078D4', '#EA4335']  # Azure blue, Google red
-explode = (0.1, 0)  # explode Azure slice
+# Custom autopct function to show both percentage and value
+def make_autopct(values):
+    def my_autopct(pct):
+        total = sum(values)
+        val = pct * total / 100.0
+        return '{p:.1f}%\n(${v:.2f})'.format(p=pct, v=val)
+    return my_autopct
 
-plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%',
+# Calculate total costs for GCP with Databricks SQL
+gcp_total_databricks = gcp_storage + gcp_compute_vm + gcp_compute_databricks + gcp_transform_databricks
+
+# Create cost comparison pie charts (excluding network/egress costs) - side by side
+plt.figure(figsize=(20, 8))
+
+# First subplot - Azure vs GCP with BigQuery
+plt.subplot(1, 2, 1)
+labels_bigquery = ['Azure', 'GCP with BigQuery']
+sizes_bigquery = [azure_total, gcp_total]
+colors_bigquery = ['#0078D4', '#EA4335']  # Azure blue, Google red
+explode_bigquery = (0.1, 0)  # explode Azure slice
+
+plt.pie(sizes_bigquery, explode=explode_bigquery, labels=labels_bigquery, colors=colors_bigquery, 
+        autopct=make_autopct(sizes_bigquery),
         shadow=True, startangle=140, textprops={'fontsize': 14})
-plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
-plt.title('Cost Comparison: Azure vs GCP (Total USD per Run, Excluding Network Costs)', fontsize=16)
+plt.axis('equal')
+plt.title('Cost Comparison: Azure vs GCP with BigQuery', fontsize=14)
+
+# Second subplot - Azure vs GCP with Databricks SQL
+plt.subplot(1, 2, 2)
+labels_databricks = ['Azure', 'GCP with Databricks SQL']
+sizes_databricks = [azure_total, gcp_total_databricks]
+colors_databricks = ['#0078D4', '#DB4437']  # Azure blue, Google dark red
+explode_databricks = (0.1, 0)  # explode Azure slice
+
+plt.pie(sizes_databricks, explode=explode_databricks, labels=labels_databricks, colors=colors_databricks, 
+        autopct=make_autopct(sizes_databricks),
+        shadow=True, startangle=140, textprops={'fontsize': 14})
+plt.axis('equal')
+plt.title('Cost Comparison: Azure vs GCP with Databricks SQL', fontsize=14)
+
 plt.tight_layout()
 plt.savefig('images/comparison/cost-comparison-pie.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create detailed cost breakdown for Azure
 plt.figure(figsize=(10, 6))
-azure_labels = ['Storage', 'Network', 'VM Instance', 'Databricks Cluster', 'Databricks SQL Warehouse']
-azure_sizes = [azure_storage, azure_network, azure_compute_vm, azure_compute_databricks, azure_transform]
-azure_colors = ['#0078D4', '#50e6ff', '#81b0d2', '#243a5e', '#0063B1']
+# Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
+azure_compute_convert = azure_compute_vm + azure_compute_databricks
+azure_labels = ['Storage', 'Network', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
+azure_sizes = [azure_storage, azure_network, azure_compute_convert, azure_transform]
+azure_colors = ['#0078D4', '#50e6ff', '#243a5e', '#0063B1']
 
-plt.pie(azure_sizes, labels=azure_labels, colors=azure_colors, autopct='%1.1f%%',
+plt.pie(azure_sizes, labels=azure_labels, colors=azure_colors, 
+        autopct=make_autopct(azure_sizes),
         shadow=True, startangle=140, textprops={'fontsize': 14})
 plt.axis('equal')
 plt.title('Azure Cost Breakdown\nTotal: $19.16/run + $1.39/day', fontsize=14)
@@ -87,22 +119,28 @@ plt.figure(figsize=(20, 8))
 
 # First subplot - GCP with BigQuery
 plt.subplot(1, 2, 1)
-gcp_bigquery_labels = ['Storage', 'Network Egress', 'VM Instance', 'Databricks Cluster', 'BigQuery Transform']
-gcp_bigquery_sizes = [gcp_storage, gcp_network, gcp_compute_vm, gcp_compute_databricks, gcp_transform]
-gcp_bigquery_colors = ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368']
+# Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
+gcp_compute_convert = gcp_compute_vm + gcp_compute_databricks
+gcp_bigquery_labels = ['Storage', 'Network Egress', 'Computing (Convert CSV to parquet)', 'BigQuery Transform']
+gcp_bigquery_sizes = [gcp_storage, gcp_network, gcp_compute_convert, gcp_transform]
+gcp_bigquery_colors = ['#4285F4', '#34A853', '#FBBC05', '#5F6368']
 
-plt.pie(gcp_bigquery_sizes, labels=gcp_bigquery_labels, colors=gcp_bigquery_colors, autopct='%1.1f%%',
+plt.pie(gcp_bigquery_sizes, labels=gcp_bigquery_labels, colors=gcp_bigquery_colors, 
+        autopct=make_autopct(gcp_bigquery_sizes),
         shadow=True, startangle=140, textprops={'fontsize': 12})
 plt.axis('equal')
 plt.title('GCP Cost Breakdown with BigQuery\nTotal: $38.31/run + $0.67/day', fontsize=14)
 
 # Second subplot - GCP with Databricks SQL Warehouse
 plt.subplot(1, 2, 2)
-gcp_databricks_labels = ['Storage', 'Network Egress', 'VM Instance', 'Databricks Cluster', 'Databricks SQL Warehouse']
-gcp_databricks_sizes = [gcp_storage, gcp_network, gcp_compute_vm, gcp_compute_databricks, gcp_transform_databricks]
-gcp_databricks_colors = ['#4285F4', '#34A853', '#FBBC05', '#EA4335', '#5F6368']  # Using same color as BigQuery Transform
+# Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
+gcp_compute_convert = gcp_compute_vm + gcp_compute_databricks
+gcp_databricks_labels = ['Storage', 'Network Egress', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
+gcp_databricks_sizes = [gcp_storage, gcp_network, gcp_compute_convert, gcp_transform_databricks]
+gcp_databricks_colors = ['#4285F4', '#34A853', '#FBBC05', '#5F6368']  # Using same color as BigQuery Transform
 
-plt.pie(gcp_databricks_sizes, labels=gcp_databricks_labels, colors=gcp_databricks_colors, autopct='%1.1f%%',
+plt.pie(gcp_databricks_sizes, labels=gcp_databricks_labels, colors=gcp_databricks_colors, 
+        autopct=make_autopct(gcp_databricks_sizes),
         shadow=True, startangle=140, textprops={'fontsize': 12})
 plt.axis('equal')
 plt.title('GCP Cost Breakdown with Databricks SQL\nTotal: $33.17/run + $0.67/day', fontsize=14)
@@ -112,8 +150,9 @@ plt.savefig('images/comparison/gcp-cost-breakdown.png', dpi=300, bbox_inches='ti
 plt.close()
 
 # Create performance comparison bar chart (total time)
-plt.figure(figsize=(10, 8))  # Increased height for more space
-x = np.arange(len(labels))
+plt.figure(figsize=(15, 8))  # Increased width and height for more space
+perf_labels = ['Azure', 'GCP']  # We only have performance data for GCP with BigQuery
+x = np.arange(len(perf_labels))
 width = 0.35
 
 # Use more distinct colors for better differentiation
@@ -122,7 +161,7 @@ bars = plt.bar(x, [azure_total_time, gcp_total_time], width, color=bar_colors)
 plt.xlabel('Cloud Provider', fontsize=14)
 plt.ylabel('Total Execution Time (Minutes)', fontsize=14)
 plt.title('Performance Comparison: Azure vs GCP (Total Minutes)', fontsize=16)
-plt.xticks(x, labels, fontsize=12)
+plt.xticks(x, perf_labels, fontsize=12)
 plt.yticks(fontsize=12)
 
 # Set y-axis limit to leave more room for labels
