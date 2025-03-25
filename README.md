@@ -2,14 +2,6 @@
 
 ## Table of Contents
 - [Overview](#overview)
-  - [Performance and Cost Visualizations](#performance-and-cost-visualizations)
-    - [Cost Comparison Charts](#cost-comparison-charts)
-      - [Overall Cost Comparison (Excluding Copy Data Costs)](#overall-cost-comparison-excluding-copy-data-costs)
-      - [Detailed Cost Breakdown by Provider](#detailed-cost-breakdown-by-provider)
-      - [Transform Cost Comparison Across Platforms](#transform-cost-comparison-across-platforms)
-    - [Performance Comparison Charts](#performance-comparison-charts)
-      - [Overall Performance Comparison](#overall-performance-comparison)
-      - [Detailed Performance Breakdown](#detailed-performance-breakdown)
 - [Modifications from Original Workshop](#modifications-from-original-workshop)
   - [🚀 Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
   - [📊 Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
@@ -30,9 +22,14 @@
   - [Reference Data](#reference-data)
   - [Data Growth by Year](#data-growth-by-year)
   - [Storage Container Sizes](#storage-container-sizes)
-  - [Performance and Cost Visualizations](#performance-and-cost-visualizations-1)
-    - [Cost Comparison Charts](#cost-comparison-charts-1)
-    - [Performance Comparison Charts](#performance-comparison-charts-1)
+- [Performance and Cost Visualizations](#performance-and-cost-visualizations)
+  - [Cost Comparison Charts](#cost-comparison-charts)
+    - [Overall Cost Comparison (Excluding Copy Data Costs)](#overall-cost-comparison-excluding-copy-data-costs)
+    - [Detailed Cost Breakdown by Provider](#detailed-cost-breakdown-by-provider)
+    - [Transform Cost Comparison Across Platforms](#transform-cost-comparison-across-platforms)
+  - [Performance Comparison Charts](#performance-comparison-charts)
+    - [Overall Performance Comparison](#overall-performance-comparison)
+    - [Detailed Performance Breakdown](#detailed-performance-breakdown)
 - [Cost Analysis](#cost-analysis)
   - [Key Cost Insights](#key-cost-insights)
   - [Key Observations](#key-observations)
@@ -268,19 +265,19 @@ The project processes a massive volume of NYC Taxi data:
 | Silver | 107.2GB |
 | Gold | 124.04GB |
 
-### Performance and Cost Visualizations
+## Performance and Cost Visualizations
 
 This section provides visual representations of the performance and cost metrics for our NYC Taxi data processing pipeline across different cloud platforms.
 
-#### Cost Comparison Charts
+### Cost Comparison Charts
 
-##### Overall Cost Comparison (Excluding Copy Data Costs)
+#### Overall Cost Comparison (Excluding Copy Data Costs)
 
 ![Cost Comparison Pie Chart](images/comparison/cost-comparison-pie.png)
 
 This chart compares the total cost per run across different platforms, excluding copy data/egress costs. Azure offers the lowest cost at $19.16/run, while GCP costs vary depending on the transform option used: $38.31/run with BigQuery (left) or $33.17/run with Databricks SQL Warehouse (right).
 
-##### Detailed Cost Breakdown by Provider
+#### Detailed Cost Breakdown by Provider
 
 ![Azure Cost Breakdown](images/comparison/azure-cost-breakdown.png)
 
@@ -290,21 +287,21 @@ Azure's costs are primarily driven by compute resources, particularly the Databr
 
 GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to copy data and computing (CSV to parquet conversion), but differ in their transform costs.
 
-##### Transform Cost Comparison Across Platforms
+#### Transform Cost Comparison Across Platforms
 
 ![Transform Cost Comparison](images/comparison/transform-cost-comparison.png)
 
 This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $30.00/run.
 
-#### Performance Comparison Charts
+### Performance Comparison Charts
 
-##### Overall Performance Comparison
+#### Overall Performance Comparison
 
 ![Performance Comparison Bar Chart](images/comparison/performance-comparison-bar.png)
 
 GCP outperforms Azure in total execution time, completing the entire pipeline in approximately 94 minutes compared to Azure's 147 minutes.
 
-##### Detailed Performance Breakdown
+#### Detailed Performance Breakdown
 
 ![Performance Breakdown Bar Chart](images/comparison/performance-breakdown-bar.png)
 
