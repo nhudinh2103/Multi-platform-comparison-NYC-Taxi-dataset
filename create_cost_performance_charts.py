@@ -7,51 +7,51 @@ os.makedirs('images/comparison', exist_ok=True)
 
 # Cost comparison data (in USD)
 # Azure costs
-azure_storage = 1.39  # daily storage cost
-azure_copy_data = 2.66  # data transfer cost per run (formerly network)
-azure_compute_vm = 1.88  # VM instance cost per run
-azure_compute_databricks = 11.10  # Databricks cluster cost per run
-azure_transform = 2.13  # Databricks SQL Warehouse cost per run
+azure_storage_cost = 1.39  # daily storage cost
+azure_copy_data_cost = 2.66  # data transfer cost per run (formerly network)
+azure_compute_vm_cost = 1.88  # VM instance cost per run
+azure_compute_databricks_cost = 11.10  # Databricks cluster cost per run
+azure_transform_cost = 2.13  # Databricks SQL Warehouse cost per run
 
 # GCP costs
-gcp_storage = 0.67  # daily storage cost
-gcp_copy_data = 12.98  # data egress cost per run (formerly network)
-gcp_compute_vm = 2.60  # VM instance cost per run
-gcp_compute_databricks = 14.22  # Databricks cluster cost per run
+gcp_storage_cost = 0.67  # daily storage cost
+gcp_copy_data_cost = 12.98  # data egress cost per run (formerly network)
+gcp_compute_vm_cost = 2.60  # VM instance cost per run
+gcp_compute_databricks_cost = 14.22  # Databricks cluster cost per run
 gcp_transform_cost = 7.84  # BigQuery transform cost per run
-gcp_transform_databricks = 2.7  # Databricks SQL Warehouse cost per run
+gcp_transform_databricks_cost = 2.7  # Databricks SQL Warehouse cost per run
 
 # Snowflake costs
-snowflake_egress_gcp = 6.37  # egress copy from GCP cost per run
-snowflake_transform = 30.0  # transform data cost per run
+snowflake_egress_gcp_cost = 6.37  # egress copy from GCP cost per run
+snowflake_transform_cost = 30.0  # transform data cost per run
 
 # Calculate total costs (including copy data/egress)
-azure_total_with_copy_data = azure_storage + azure_copy_data + azure_compute_vm + azure_compute_databricks
-gcp_total_with_copy_data = gcp_storage + gcp_copy_data + gcp_compute_vm + gcp_compute_databricks + gcp_transform_cost
+azure_total_with_copy_data_cost = azure_storage_cost + azure_copy_data_cost + azure_compute_vm_cost + azure_compute_databricks_cost
+gcp_total_with_copy_data_cost = gcp_storage_cost + gcp_copy_data_cost + gcp_compute_vm_cost + gcp_compute_databricks_cost + gcp_transform_cost
 
 # Calculate total costs (excluding copy data/egress as per requirement)
-azure_total = azure_storage + azure_compute_vm + azure_compute_databricks
-gcp_total = gcp_storage + gcp_compute_vm + gcp_compute_databricks + gcp_transform_cost
+azure_total_cost = azure_storage_cost + azure_compute_vm_cost + azure_compute_databricks_cost
+gcp_total_cost = gcp_storage_cost + gcp_compute_vm_cost + gcp_compute_databricks_cost + gcp_transform_cost
 
 # Calculate transform costs for comparison
-bigquery_transform = gcp_transform_cost  # BigQuery transform cost
-databricks_gcp_transform = gcp_transform_databricks  # Databricks SQL Warehouse cost on GCP
-snowflake_transform_cost = snowflake_transform  # Snowflake transform cost
+bigquery_transform_cost = gcp_transform_cost  # BigQuery transform cost
+databricks_gcp_transform_cost = gcp_transform_databricks_cost  # Databricks SQL Warehouse cost on GCP
+# snowflake_transform_cost already has the correct naming
 
 # Performance comparison data (in minutes)
 # Azure performance
-azure_convert = 120.65  # Convert CSV to Parquet (120min 39s)
-azure_transform = 11.47  # Transform (11min 28s)
-azure_materialize = 14.43  # Materialize (14min 26s)
+azure_convert_time = 120.65  # Convert CSV to Parquet (120min 39s)
+azure_transform_time = 11.47  # Transform (11min 28s)
+azure_materialize_time = 14.43  # Materialize (14min 26s)
 
 # GCP performance
-gcp_convert = 91.0  # Convert CSV to Parquet (91min)
+gcp_convert_time = 91.0  # Convert CSV to Parquet (91min)
 gcp_transform_time = 1.62  # Transform (1min 37s)
-gcp_materialize = 1.05  # Materialize (1min 3s)
+gcp_materialize_time = 1.05  # Materialize (1min 3s)
 
 # Calculate total execution times
-azure_total_time = azure_convert + azure_transform + azure_materialize
-gcp_total_time = gcp_convert + gcp_transform_time + gcp_materialize
+azure_total_time = azure_convert_time + azure_transform_time + azure_materialize_time
+gcp_total_time = gcp_convert_time + gcp_transform_time + gcp_materialize_time
 
 # Custom autopct function to show both percentage and value
 def make_autopct(values):
@@ -62,7 +62,7 @@ def make_autopct(values):
     return my_autopct
 
 # Calculate total costs for GCP with Databricks SQL
-gcp_total_databricks = gcp_storage + gcp_compute_vm + gcp_compute_databricks + gcp_transform_databricks
+gcp_total_databricks_cost = gcp_storage_cost + gcp_compute_vm_cost + gcp_compute_databricks_cost + gcp_transform_databricks_cost
 
 # Create cost comparison pie charts (excluding network/egress costs) - side by side
 plt.figure(figsize=(20, 8))
@@ -70,7 +70,7 @@ plt.figure(figsize=(20, 8))
 # First subplot - Azure vs GCP with BigQuery
 plt.subplot(1, 2, 1)
 labels_bigquery = ['Azure', 'GCP with BigQuery']
-sizes_bigquery = [azure_total, gcp_total]
+sizes_bigquery = [azure_total_cost, gcp_total_cost]
 colors_bigquery = ['#0078D4', '#EA4335']  # Azure blue, Google red
 explode_bigquery = (0.1, 0)  # explode Azure slice
 
@@ -83,7 +83,7 @@ plt.title('Cost Comparison: Azure vs GCP with BigQuery', fontsize=14)
 # Second subplot - Azure vs GCP with Databricks SQL
 plt.subplot(1, 2, 2)
 labels_databricks = ['Azure', 'GCP with Databricks SQL']
-sizes_databricks = [azure_total, gcp_total_databricks]
+sizes_databricks = [azure_total_cost, gcp_total_databricks_cost]
 colors_databricks = ['#0078D4', '#DB4437']  # Azure blue, Google dark red
 explode_databricks = (0.1, 0)  # explode Azure slice
 
@@ -100,9 +100,9 @@ plt.close()
 # Create detailed cost breakdown for Azure
 plt.figure(figsize=(10, 6))
 # Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
-azure_compute_convert = azure_compute_vm + azure_compute_databricks
-azure_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
-azure_sizes = [azure_storage, azure_copy_data, azure_compute_convert, azure_transform]
+azure_compute_convert_cost = azure_compute_vm_cost + azure_compute_databricks_cost
+azure_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'Transform (Databricks SQL Warehouse)']
+azure_sizes = [azure_storage_cost, azure_copy_data_cost, azure_compute_convert_cost, azure_transform_cost]
 azure_colors = ['#0078D4', '#50e6ff', '#243a5e', '#0063B1']
 
 plt.pie(azure_sizes, labels=azure_labels, colors=azure_colors, 
@@ -120,9 +120,9 @@ plt.figure(figsize=(20, 8))
 # First subplot - GCP with BigQuery
 plt.subplot(1, 2, 1)
 # Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
-gcp_compute_convert = gcp_compute_vm + gcp_compute_databricks
-gcp_bigquery_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'BigQuery Transform']
-gcp_bigquery_sizes = [gcp_storage, gcp_copy_data, gcp_compute_convert, gcp_transform_cost]
+gcp_compute_convert_cost = gcp_compute_vm_cost + gcp_compute_databricks_cost
+gcp_bigquery_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'Transform (BigQuery)']
+gcp_bigquery_sizes = [gcp_storage_cost, gcp_copy_data_cost, gcp_compute_convert_cost, gcp_transform_cost]
 gcp_bigquery_colors = ['#4285F4', '#34A853', '#FBBC05', '#5F6368']
 
 plt.pie(gcp_bigquery_sizes, labels=gcp_bigquery_labels, colors=gcp_bigquery_colors, 
@@ -134,9 +134,9 @@ plt.title('GCP Cost Breakdown with BigQuery\nTotal: $38.31/run + $0.67/day', fon
 # Second subplot - GCP with Databricks SQL Warehouse
 plt.subplot(1, 2, 2)
 # Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
-gcp_compute_convert = gcp_compute_vm + gcp_compute_databricks
-gcp_databricks_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
-gcp_databricks_sizes = [gcp_storage, gcp_copy_data, gcp_compute_convert, gcp_transform_databricks]
+gcp_compute_convert_cost = gcp_compute_vm_cost + gcp_compute_databricks_cost
+gcp_databricks_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'Transform (Databricks SQL Warehouse)']
+gcp_databricks_sizes = [gcp_storage_cost, gcp_copy_data_cost, gcp_compute_convert_cost, gcp_transform_databricks_cost]
 gcp_databricks_colors = ['#4285F4', '#34A853', '#FBBC05', '#5F6368']  # Using same color as BigQuery Transform
 
 plt.pie(gcp_databricks_sizes, labels=gcp_databricks_labels, colors=gcp_databricks_colors, 
@@ -182,11 +182,11 @@ x = np.arange(3)  # 3 operations
 width = 0.35
 
 # Azure bars - using a distinct blue
-azure_bars = plt.bar(x - width/2, [azure_convert, azure_transform, azure_materialize], 
+azure_bars = plt.bar(x - width/2, [azure_convert_time, azure_transform_time, azure_materialize_time], 
                     width, label='Azure', color='#0078D4')
 
 # GCP bars - using Google red for better contrast
-gcp_bars = plt.bar(x + width/2, [gcp_convert, gcp_transform_time, gcp_materialize], 
+gcp_bars = plt.bar(x + width/2, [gcp_convert_time, gcp_transform_time, gcp_materialize_time], 
                   width, label='GCP', color='#EA4335')
 
 plt.xlabel('Processing Step', fontsize=14)
@@ -197,8 +197,8 @@ plt.yticks(fontsize=12)
 plt.legend(fontsize=12)
 
 # Set y-axis limit to leave more room for labels
-max_value = max(azure_convert, azure_transform, azure_materialize, 
-                gcp_convert, gcp_transform_time, gcp_materialize)
+max_value = max(azure_convert_time, azure_transform_time, azure_materialize_time, 
+                gcp_convert_time, gcp_transform_time, gcp_materialize_time)
 plt.ylim(0, max_value * 1.15)  # Add 15% more space at the top
 
 # Add value labels on top of bars
@@ -218,11 +218,11 @@ x = np.arange(2)  # 2 operations (transform and materialize)
 width = 0.35
 
 # Azure bars - using a distinct blue
-azure_bars = plt.bar(x - width/2, [azure_transform, azure_materialize], 
+azure_bars = plt.bar(x - width/2, [azure_transform_time, azure_materialize_time], 
                     width, label='Azure', color='#0078D4')
 
 # GCP bars - using Google red for better contrast
-gcp_bars = plt.bar(x + width/2, [gcp_transform_time, gcp_materialize], 
+gcp_bars = plt.bar(x + width/2, [gcp_transform_time, gcp_materialize_time], 
                   width, label='GCP', color='#EA4335')
 
 plt.xlabel('Processing Step', fontsize=14)
@@ -233,7 +233,7 @@ plt.yticks(fontsize=12)
 plt.legend(fontsize=12)
 
 # Set y-axis limit to leave more room for labels
-max_value = max(azure_transform, azure_materialize, gcp_transform_time, gcp_materialize)
+max_value = max(azure_transform_time, azure_materialize_time, gcp_transform_time, gcp_materialize_time)
 plt.ylim(0, max_value * 1.3)  # Add 30% more space at the top for this chart
 
 # Add value labels on top of bars
@@ -254,7 +254,7 @@ width = 0.5
 
 # Use distinct colors
 platform_colors = ['#4285F4', '#EA4335', '#29B5E8']  # BigQuery blue, Databricks red, Snowflake blue
-transform_costs = [bigquery_transform, databricks_gcp_transform, snowflake_transform_cost]
+transform_costs = [bigquery_transform_cost, databricks_gcp_transform_cost, snowflake_transform_cost]
 bars = plt.bar(x, transform_costs, width, color=platform_colors)
 plt.xlabel('Platform', fontsize=14)
 plt.ylabel('Transform Cost (USD per Run)', fontsize=14)
