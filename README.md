@@ -606,9 +606,80 @@ Fix by running this command in Databricks:
 FSCK REPAIR TABLE <table_name>;
 ```
 
+**Accidentally Deleted _delta_log Folder**
+
+To recover a Delta table after accidentally deleting its `_delta_log` folder:
+
+```python
+%sql
+from delta.tables import *
+deltaTable = DeltaTable.convertToDelta(spark, f"parquet.`<table_data_dir_path>`", "trip_year STRING, trip_month STRING")
+```
+
+Specify your partition columns (e.g., `trip_year STRING, trip_month STRING`) based on your table's partitioning scheme.
+
+**Zero Row Count**
+
+To fix a Delta table showing zero rows despite having data:
+
+1. Back up the existing `_delta_log` folder.
+
+2. Remove the corrupted `_delta_log` folder.
+
+3. Rebuild the Delta table from underlying Parquet files by following **Accidentally Deleted _delta_log Folder** steps above.
+
 ### Best Practices
 
 You can follow link [Databricks Delta Lake best practices](https://docs.databricks.com/aws/en/delta/best-practices) for best practices with delta lake.
+
+### Schema Management
+
+Delta Lake provides powerful schema management capabilities that standard Parquet files lack:
+
+- **Schema Enforcement**: Protects data quality by rejecting writes with incompatible schemas
+  - Prevents data corruption by validating all data against the table's schema
+  - Rejects writes that don't match the schema, unlike Parquet which accepts any schema
+  - Acts as a safeguard against accidental schema changes that could break downstream processes
+  
+- **Schema Evolution**: Enables tables to adapt to changing data requirements over time
+  - Supports adding new columns to accommodate new data attributes
+  - Allows changing column data types (with certain compatibility restrictions)
+  - Handles nested data structures and complex schema changes
+  - Maintains backward compatibility with existing queries
+
+These features make Delta Lake particularly valuable for long-running data pipelines where data schemas may evolve over time, and data quality is critical.
+
+### Storage Optimization
+
+#### Choosing built-in cloud object storage or using delta lake
+
+When designing your data storage strategy, you have two main options to consider:
+
+- **Option 1: Standard Parquet with Cloud Storage Features**
+  - Use standard Parquet format files
+  - Rely on cloud provider's built-in features:
+    - Time-travel recovery
+    - Object versioning
+    - Soft-delete functionality
+  - Simpler implementation but potentially higher storage costs
+
+- **Option 2: Delta Lake without Cloud Storage Features**
+  - Use Delta Lake format
+  - Disable redundant cloud storage features:
+    - Turn off soft delete functionality
+    - Disable time-travel recovery features
+    - Disable blob version ID tracking
+  - These features are already provided by Delta Lake's native versioning and time travel capabilities
+  - Avoid duplicate functionality and reduce storage costs
+
+Choose between these options based on your specific needs and requirements. Delta Lake provides more control over versioning and recovery while potentially optimizing storage costs when configured properly.
+
+- **File Management Strategy**: While using simple append mode is convenient for development, consider implementing a tiered storage approach for production:
+  - Keep only the latest version of parquet files in your primary storage location
+  - Automatically move older versions to backup/cold/archive storage tiers
+  - Leverage Delta Lake's version restore mechanism to retrieve historical data when needed
+  
+  This approach optimizes storage costs while maintaining the ability to access historical data through Delta Lake's time travel capabilities.
 
 ## Future Enhancements
 
