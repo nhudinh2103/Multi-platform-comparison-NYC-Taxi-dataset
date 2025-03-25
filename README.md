@@ -1,7 +1,3 @@
-# Multi-platform-comparison-NYC-Taxi-dataset
-
-A multi-platform comparison project analyzing NYC Taxi data (1.4B+ records) across Databricks, BigQuery, and Snowflake on different cloud providers (Azure, GCP) to benchmark performance and cost efficiency for large-scale data processing workloads.
-
 # NYC Taxi Data Analytics: Multi-Platform Comparison (Databricks, BigQuery, Snowflake)
 
 ## Table of Contents
@@ -313,14 +309,14 @@ We tracked the costs associated with running our data pipeline across both cloud
 
 | Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
 |:--------------:|:-------------:|:---------:|:-------:|:----------:|
-| **Azure** | **Storage** | Daily Storage | Azure Data Lake | $1.39/day |
+| **Azure** | **Storage** | Daily Storage | Azure Data Lake | Updating |
 | | **Copy Data** | Data Transfer | Azure Data Factory | $2.66/run |
 | | **Compute** | Convert CSV to Parquet | VM Instance | $1.88/run |
 | | | | Databricks Cluster Spark Computing | $11.10/run |
 | | | Transform Data | Databricks SQL Warehouse | $2.13/run |
 | | **TOTAL** | | | **$19.16/run** + $1.39/day |
 |||||
-| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | $0.67/day |
+| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | Updating |
 | | **Copy Data** | Data Egress | Storage Transfer | $12.98/run |
 | | **Compute** | Convert CSV to Parquet | VM Instance | $2.60/run |
 | | | | Databricks Cluster Spark Computing | $14.22/run |
