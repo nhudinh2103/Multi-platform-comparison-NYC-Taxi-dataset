@@ -10,11 +10,10 @@
     - [Performance Comparison Charts](#performance-comparison-charts)
       - [Overall Performance Comparison](#overall-performance-comparison)
       - [Detailed Performance Breakdown](#detailed-performance-breakdown)
-- [Modifications from  Original Workshop](#modifications-from-original-workshop)
-  - [Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
-  - [Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
-  - [Optimize Transformation Query for Big Dataset (Yellow Taxi)](#-optimize-transformation-query-for-big-dataset-yellow-taxi)
-  - [Additional Enhancements](#additional-enhancements)
+- [Modifications from Original Workshop](#modifications-from-original-workshop)
+  - [🚀 Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
+  - [📊 Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
+  - [🔍 Optimize Transformation Query for Big Dataset (Yellow Taxi)](#-optimize-transformation-query-for-big-dataset-yellow-taxi)
 - [Architecture](#architecture)
   - [High-Level Architecture](#high-level-architecture)
   - [Data Ingestion Flow](#data-ingestion-flow)
@@ -31,15 +30,22 @@
   - [Reference Data](#reference-data)
   - [Data Growth by Year](#data-growth-by-year)
   - [Storage Container Sizes](#storage-container-sizes)
+  - [Performance and Cost Visualizations](#performance-and-cost-visualizations-1)
+    - [Cost Comparison Charts](#cost-comparison-charts-1)
+    - [Performance Comparison Charts](#performance-comparison-charts-1)
 - [Cost Analysis](#cost-analysis)
-  - [Key Cost Considerations for Databricks Clusters](#key-cost-considerations-for-databricks-clusters)
+  - [Key Cost Insights](#key-cost-insights)
+  - [Key Observations](#key-observations)
 - [Benchmark Results](#benchmark-results)
-  - [SQL Query Optimization Results (Azure)](#-sql-query-optimization-results-azure)
-  - [Data Pipeline Execution Times (Yellow Taxi)](#-data-pipeline-execution-times-yellow-taxi)
-  - [Transform Method Evolution](#-transform-method-evolution)
+  - [Key Findings](#key-findings)
+  - [🕒 Data Pipeline Execution Times (Yellow Taxi)](#-data-pipeline-execution-times-yellow-taxi)
+  - [🔄 Transform Method Evolution](#-transform-method-evolution)
+  - [🚀 SQL Query Optimization Results (Azure)](#-sql-query-optimization-results-azure)
 - [Resources](#resources)
-  - [Computing Resources](#-computing-resources)
-  - [Storage](#-storage)
+  - [💻 Computing Resources](#-computing-resources)
+    - [Databricks](#databricks)
+    - [Snowflake](#snowflake)
+  - [🗄️ Storage](#️-storage)
 - [Project Structure](#project-structure)
 - [Delta Lake](#delta-lake)
   - [Troubleshooting](#troubleshooting)
@@ -57,48 +63,6 @@ The project implements and benchmarks the same data pipeline across:
 - **Snowflake**: Using Snowflake's data warehousing capabilities with data from GCP
 
 This multi-platform approach demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management. The comprehensive cost and performance analysis helps data engineers make informed decisions when selecting platforms for large-scale data processing workloads.
-
-### Performance and Cost Visualizations
-
-This section provides visual representations of the performance and cost metrics for our NYC Taxi data processing pipeline across different cloud platforms.
-
-#### Cost Comparison Charts
-
-##### Overall Cost Comparison (Excluding Copy Data Costs)
-
-![Cost Comparison Pie Chart](images/comparison/cost-comparison-pie.png)
-
-This chart compares the total cost per run across different platforms, excluding copy data/egress costs. Azure offers the lowest cost at $19.16/run, while GCP costs vary depending on the transform option used: $38.31/run with BigQuery (left) or $33.17/run with Databricks SQL Warehouse (right).
-
-##### Detailed Cost Breakdown by Provider
-
-![Azure Cost Breakdown](images/comparison/azure-cost-breakdown.png)
-
-Azure's costs are primarily driven by compute resources, particularly the Databricks cluster which accounts for the majority of the expenses.
-
-![GCP Cost Breakdown](images/comparison/gcp-cost-breakdown.png)
-
-GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to copy data and computing (CSV to parquet conversion), but differ in their transform costs.
-
-##### Transform Cost Comparison Across Platforms
-
-![Transform Cost Comparison](images/comparison/transform-cost-comparison.png)
-
-This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $30.00/run.
-
-#### Performance Comparison Charts
-
-##### Overall Performance Comparison
-
-![Performance Comparison Bar Chart](images/comparison/performance-comparison-bar.png)
-
-GCP outperforms Azure in total execution time, completing the entire pipeline in approximately 94 minutes compared to Azure's 147 minutes.
-
-##### Detailed Performance Breakdown
-
-![Performance Breakdown Bar Chart](images/comparison/performance-breakdown-bar.png)
-
-The detailed breakdown shows that while both platforms have similar patterns (with data conversion taking the most time), GCP significantly outperforms Azure in the transformation and materialization steps.
 
 ## Modifications from Original Workshop
 
@@ -304,6 +268,48 @@ The project processes a massive volume of NYC Taxi data:
 | Silver | 107.2GB |
 | Gold | 124.04GB |
 
+### Performance and Cost Visualizations
+
+This section provides visual representations of the performance and cost metrics for our NYC Taxi data processing pipeline across different cloud platforms.
+
+#### Cost Comparison Charts
+
+##### Overall Cost Comparison (Excluding Copy Data Costs)
+
+![Cost Comparison Pie Chart](images/comparison/cost-comparison-pie.png)
+
+This chart compares the total cost per run across different platforms, excluding copy data/egress costs. Azure offers the lowest cost at $19.16/run, while GCP costs vary depending on the transform option used: $38.31/run with BigQuery (left) or $33.17/run with Databricks SQL Warehouse (right).
+
+##### Detailed Cost Breakdown by Provider
+
+![Azure Cost Breakdown](images/comparison/azure-cost-breakdown.png)
+
+Azure's costs are primarily driven by compute resources, particularly the Databricks cluster which accounts for the majority of the expenses.
+
+![GCP Cost Breakdown](images/comparison/gcp-cost-breakdown.png)
+
+GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to copy data and computing (CSV to parquet conversion), but differ in their transform costs.
+
+##### Transform Cost Comparison Across Platforms
+
+![Transform Cost Comparison](images/comparison/transform-cost-comparison.png)
+
+This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $30.00/run.
+
+#### Performance Comparison Charts
+
+##### Overall Performance Comparison
+
+![Performance Comparison Bar Chart](images/comparison/performance-comparison-bar.png)
+
+GCP outperforms Azure in total execution time, completing the entire pipeline in approximately 94 minutes compared to Azure's 147 minutes.
+
+##### Detailed Performance Breakdown
+
+![Performance Breakdown Bar Chart](images/comparison/performance-breakdown-bar.png)
+
+The detailed breakdown shows that while both platforms have similar patterns (with data conversion taking the most time), GCP significantly outperforms Azure in the transformation and materialization steps.
+
 ## Cost Analysis
 
 We tracked the costs associated with running our data pipeline across both cloud platforms:
@@ -352,19 +358,9 @@ We tracked the costs associated with running our data pipeline across both cloud
 1. **Cost vs. Performance Tradeoff**: 
    - **Azure** offers the **lowest overall cost** ($19.16/run) but slower performance
    - **GCP** provides **fastest processing** but at a **higher cost** ($33.17-$38.31/run)
-   - **Snowflake** has the **highest transform cost** ($30.00/run) with moderate performance
+   - **Snowflake** has the **highest transform cost** ($30.00/run) with slowest performance transformation
 
-2. **Transformation Speed**: 
-   - GCP's BigQuery significantly outperforms Azure's Databricks SQL Warehouse for transformation tasks (1.62 min vs. 11.47 min)
-   - GCP's materialization is also much faster (1.05 min vs. 14.43 min)
-   - Snowflake's performance falls between Azure and GCP (26.41 min for transform, 23.54 min for materialize)
-
-3. **Cost Structure Differences**:
-   - Azure's costs are dominated by compute (Databricks cluster)
-   - GCP's costs are heavily influenced by copy data charges
-   - Snowflake has high transform costs plus additional copy data charges when copying data from other cloud providers
-
-4. **Platform Selection Considerations**:
+2. **Platform Selection Considerations**:
    - For cost-sensitive workloads: Databricks SQL Warehouse on Azure offers the best value
    - For performance-critical workloads: BigQuery on GCP provides the fastest processing
    - For cross-cloud scenarios: Consider the additional copy data costs when moving data between platforms
@@ -616,31 +612,7 @@ FSCK REPAIR TABLE <table_name>;
 
 ### Best Practices
 
-Based on [Databricks Delta Lake best practices](https://docs.databricks.com/aws/en/delta/best-practices), here are key recommendations for working with Delta Lake:
-
-**Table Creation and Management**
-- Always use `CREATE OR REPLACE TABLE` statements rather than deleting and recreating tables
-- Use liquid clustering rather than partitioning, Z-order, or other data organization strategies to optimize data layout for data skipping
-- Compact small files into larger ones to improve read throughput using the `OPTIMIZE` command
-
-**Table Modification**
-- Avoid deleting the entire directory of a Delta table and creating a new table on the same path
-  - Deleting directories is inefficient and can take hours for large tables
-  - Directory deletion is not atomic, potentially causing inconsistent query results
-  - Instead, use `TRUNCATE TABLE` to remove all data or `OVERWRITE` mode when writing to a Delta table
-
-**Performance Optimization**
-- Use the `VACUUM` command to clean up old files after table operations
-- For Delta Lake merge operations:
-  - Reduce the search space for matches by adding partition predicates
-  - Use optimized writes with `dataFrameWriter.option("optimizeWrite", "true")`
-  - Compact small files to improve read throughput
-
-**Delta Lake vs. Parquet Differences**
-- Delta Lake automatically handles metadata refreshing, unlike Parquet which requires manual `REFRESH TABLE`
-- Delta Lake automatically tracks partitions, eliminating the need for `ALTER TABLE ADD/DROP PARTITION`
-- Delta Lake provides predicate pushdown optimization without manual configuration
-- Never manually modify Delta Lake files; use the transaction log to commit changes
+You can follow link [Databricks Delta Lake best practices](https://docs.databricks.com/aws/en/delta/best-practices) for best practices with delta lake.
 
 ## Future Enhancements
 
