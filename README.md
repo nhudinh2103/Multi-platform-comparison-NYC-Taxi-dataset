@@ -1,4 +1,4 @@
-# NYC Taxi Data Analytics with Databricks
+# NYC Taxi Data Analytics: Multi-Platform Comparison (Databricks, BigQuery, Snowflake)
 
 ## Table of Contents
 - [Overview](#overview)
@@ -43,9 +43,15 @@
 
 ## Overview
 
-An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) using Databricks and Snowflake across different cloud vendors to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with SQL Cloud Data Warehouse, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
+An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) across multiple platforms (Databricks, BigQuery, Snowflake) and cloud vendors (Azure, GCP) to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with cloud-native SQL data warehousing solutions, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
 
-Implemented on both Azure and Google Cloud Platform (GCP), this project demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management. The project also includes a performance comparison between Databricks and Snowflake for data transformation and materialization tasks.
+The project implements and benchmarks the same data pipeline across:
+- **Azure Databricks**: Using Azure Data Lake Storage and Databricks SQL Warehouse
+- **GCP Databricks**: Using Google Cloud Storage and Databricks SQL Warehouse
+- **GCP BigQuery**: Using Google Cloud Storage and BigQuery for transformations
+- **Snowflake**: Using Snowflake's data warehousing capabilities with data from GCP
+
+This multi-platform approach demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management. The comprehensive cost and performance analysis helps data engineers make informed decisions when selecting platforms for large-scale data processing workloads.
 
 ### Performance and Cost Visualizations
 
@@ -59,6 +65,12 @@ This section provides visual representations of the performance and cost metrics
 
 Azure's total cost per run is significantly lower than GCP's when excluding network/egress costs, which can vary significantly based on implementation details.
 
+##### Transform Cost Comparison Across Platforms
+
+![Transform Cost Comparison](images/comparison/transform-cost-comparison.png)
+
+This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $30.00/run.
+
 ##### Detailed Cost Breakdown by Provider
 
 ![Azure Cost Breakdown](images/comparison/azure-cost-breakdown.png)
@@ -67,7 +79,7 @@ Azure's costs are primarily driven by compute resources, particularly the Databr
 
 ![GCP Cost Breakdown](images/comparison/gcp-cost-breakdown.png)
 
-GCP's cost structure shows more diversity, with significant portions going to network egress, Databricks cluster, and BigQuery transform operations.
+GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to network egress and Databricks cluster, but differ in their transform costs.
 
 #### Performance Comparison Charts
 
@@ -82,12 +94,6 @@ GCP outperforms Azure in total execution time, completing the entire pipeline in
 ![Performance Breakdown Bar Chart](images/comparison/performance-breakdown-bar.png)
 
 The detailed breakdown shows that while both platforms have similar patterns (with data conversion taking the most time), GCP significantly outperforms Azure in the transformation and materialization steps.
-
-##### Transform and Materialize Performance
-
-![Transform and Materialize Comparison](images/comparison/transform-materialize-comparison.png)
-
-This zoomed-in view highlights the dramatic performance difference in the transformation and materialization steps, where GCP's BigQuery shows substantial advantages over Azure's Databricks SQL Warehouse.
 
 ## Modifications from Original Workshop
 
@@ -303,33 +309,60 @@ We tracked the costs associated with running our data pipeline across both cloud
 | | **Network** | Data Transfer | Azure Data Factory | $2.66/run |
 | | **Compute** | Convert CSV to Parquet | VM Instance | $1.88/run |
 | | | | Databricks Cluster Spark Computing | $11.10/run |
-| | | Transform Data | Databricks SQL Warehouse | Updating |
+| | | Transform Data | Databricks SQL Warehouse | $2.13/run |
+| | **TOTAL** | | | **$19.16/run** + $1.39/day |
 |||||
 | **GCP** | **Storage** | Daily Storage | GCS + BigQuery | $0.67/day |
 | | **Network** | Data Egress | Storage Transfer | $12.98/run |
 | | **Compute** | Convert CSV to Parquet | VM Instance | $2.60/run |
 | | | | Databricks Cluster Spark Computing | $14.22/run |
-| | | Transform Data | BigQuery | $7.84/run |
+| | | Transform Data (Option 1) | BigQuery | $7.84/run |
+| | | Transform Data (Option 2) | Databricks SQL Warehouse | $2.70/run |
+| | **TOTAL (with BigQuery)** | | | **$38.31/run** + $0.67/day |
+| | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + $0.67/day |
+|||||
+| **Snowflake** | **Network** | Egress Copy from GCP | Snowflake | $6.37/run |
+| | **Compute** | Transform Data | Snowflake | $30.00/run |
+| | **TOTAL** | | | **$36.37/run** |
 
 ### Key Cost Insights
+
+- **Total Cost Comparison**: 
+  - **Azure** offers the lowest total cost at **$19.16/run** (plus daily storage)
+  - **GCP with Databricks SQL** costs **$33.17/run** (plus daily storage)
+  - **GCP with BigQuery** costs **$38.31/run** (plus daily storage)
+  - **Snowflake** costs **$36.37/run**
 
 - **Storage Cost Comparison**: Azure storage costs ($1.39/day) are approximately twice as expensive as GCP storage ($0.67/day) for similar workloads and data volumes.
   
 - **Data Egress Considerations**: When ingesting data, be mindful of egress charges when moving data between different cloud vendors. These charges can be significant ($12.98/run in our GCP implementation) and should be avoided when possible by keeping data processing within a single cloud ecosystem.
 
+- **Transform Cost Comparison**: There are significant differences in transform costs across platforms:
+  - Databricks SQL Warehouse is the most cost-effective option on both Azure ($2.13/run) and GCP ($2.70/run)
+  - BigQuery is moderately priced at $7.84/run
+  - Snowflake is the most expensive at $30.00/run, plus additional egress costs ($6.37/run) when copying data from GCP
+
 ### Key Observations
 
 1. **Cost vs. Performance Tradeoff**: 
-   - Azure offers lower overall cost but slower performance
-   - GCP provides faster processing but at a higher cost
+   - **Azure** offers the **lowest overall cost** ($19.16/run) but slower performance
+   - **GCP** provides **fastest processing** but at a **higher cost** ($33.17-$38.31/run)
+   - **Snowflake** has the **highest transform cost** ($30.00/run) with moderate performance
 
 2. **Transformation Speed**: 
    - GCP's BigQuery significantly outperforms Azure's Databricks SQL Warehouse for transformation tasks (1.62 min vs. 11.47 min)
    - GCP's materialization is also much faster (1.05 min vs. 14.43 min)
+   - Snowflake's performance falls between Azure and GCP (26.41 min for transform, 23.54 min for materialize)
 
 3. **Cost Structure Differences**:
    - Azure's costs are dominated by compute (Databricks cluster)
    - GCP's costs are heavily influenced by network egress charges
+   - Snowflake has high transform costs plus additional egress charges when copying data from other cloud providers
+
+4. **Platform Selection Considerations**:
+   - For cost-sensitive workloads: Databricks SQL Warehouse on Azure offers the best value
+   - For performance-critical workloads: BigQuery on GCP provides the fastest processing
+   - For cross-cloud scenarios: Consider the additional egress costs when moving data between platforms
 
 ## Benchmark Results
 
