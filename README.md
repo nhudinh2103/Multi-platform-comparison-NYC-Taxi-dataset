@@ -59,11 +59,11 @@ This section provides visual representations of the performance and cost metrics
 
 #### Cost Comparison Charts
 
-##### Overall Cost Comparison (Excluding Network Costs)
+##### Overall Cost Comparison (Excluding Copy Data Costs)
 
 ![Cost Comparison Pie Chart](images/comparison/cost-comparison-pie.png)
 
-This chart compares the total cost per run across different platforms, excluding network/egress costs. Azure offers the lowest cost at $19.16/run, while GCP costs vary depending on the transform option used: $38.31/run with BigQuery (left) or $33.17/run with Databricks SQL Warehouse (right).
+This chart compares the total cost per run across different platforms, excluding copy data/egress costs. Azure offers the lowest cost at $19.16/run, while GCP costs vary depending on the transform option used: $38.31/run with BigQuery (left) or $33.17/run with Databricks SQL Warehouse (right).
 
 ##### Detailed Cost Breakdown by Provider
 
@@ -73,7 +73,7 @@ Azure's costs are primarily driven by compute resources, particularly the Databr
 
 ![GCP Cost Breakdown](images/comparison/gcp-cost-breakdown.png)
 
-GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to network egress and computing (CSV to parquet conversion), but differ in their transform costs.
+GCP's cost structure is shown with two options: using BigQuery for transformations (left, $38.31/run) and using Databricks SQL Warehouse (right, $33.17/run). Both options show significant portions going to copy data and computing (CSV to parquet conversion), but differ in their transform costs.
 
 ##### Transform Cost Comparison Across Platforms
 
@@ -306,14 +306,14 @@ We tracked the costs associated with running our data pipeline across both cloud
 | Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
 |:--------------:|:-------------:|:---------:|:-------:|:----------:|
 | **Azure** | **Storage** | Daily Storage | Azure Data Lake | $1.39/day |
-| | **Network** | Data Transfer | Azure Data Factory | $2.66/run |
+| | **Copy Data** | Data Transfer | Azure Data Factory | $2.66/run |
 | | **Compute** | Convert CSV to Parquet | VM Instance | $1.88/run |
 | | | | Databricks Cluster Spark Computing | $11.10/run |
 | | | Transform Data | Databricks SQL Warehouse | $2.13/run |
 | | **TOTAL** | | | **$19.16/run** + $1.39/day |
 |||||
 | **GCP** | **Storage** | Daily Storage | GCS + BigQuery | $0.67/day |
-| | **Network** | Data Egress | Storage Transfer | $12.98/run |
+| | **Copy Data** | Data Egress | Storage Transfer | $12.98/run |
 | | **Compute** | Convert CSV to Parquet | VM Instance | $2.60/run |
 | | | | Databricks Cluster Spark Computing | $14.22/run |
 | | | Transform Data (Option 1) | BigQuery | $7.84/run |
@@ -321,7 +321,7 @@ We tracked the costs associated with running our data pipeline across both cloud
 | | **TOTAL (with BigQuery)** | | | **$38.31/run** + $0.67/day |
 | | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + $0.67/day |
 |||||
-| **Snowflake** | **Network** | Egress Copy from GCP | Snowflake | $6.37/run |
+| **Snowflake** | **Copy Data** | Egress Copy from GCP | Snowflake | $6.37/run |
 | | **Compute** | Transform Data | Snowflake | $30.00/run |
 | | **TOTAL** | | | **$36.37/run** |
 
@@ -335,7 +335,7 @@ We tracked the costs associated with running our data pipeline across both cloud
 
 - **Storage Cost Comparison**: Azure storage costs ($1.39/day) are approximately twice as expensive as GCP storage ($0.67/day) for similar workloads and data volumes.
   
-- **Data Egress Considerations**: When ingesting data, be mindful of egress charges when moving data between different cloud vendors. These charges can be significant ($12.98/run in our GCP implementation) and should be avoided when possible by keeping data processing within a single cloud ecosystem.
+- **Copy Data Considerations**: When ingesting data, be mindful of data copy/egress charges when moving data between different cloud vendors. These charges can be significant ($12.98/run in our GCP implementation) and should be avoided when possible by keeping data processing within a single cloud ecosystem.
 
 - **Transform Cost Comparison**: There are significant differences in transform costs across platforms:
   - Databricks SQL Warehouse is the most cost-effective option on both Azure ($2.13/run) and GCP ($2.70/run)
@@ -356,13 +356,13 @@ We tracked the costs associated with running our data pipeline across both cloud
 
 3. **Cost Structure Differences**:
    - Azure's costs are dominated by compute (Databricks cluster)
-   - GCP's costs are heavily influenced by network egress charges
-   - Snowflake has high transform costs plus additional egress charges when copying data from other cloud providers
+   - GCP's costs are heavily influenced by copy data charges
+   - Snowflake has high transform costs plus additional copy data charges when copying data from other cloud providers
 
 4. **Platform Selection Considerations**:
    - For cost-sensitive workloads: Databricks SQL Warehouse on Azure offers the best value
    - For performance-critical workloads: BigQuery on GCP provides the fastest processing
-   - For cross-cloud scenarios: Consider the additional egress costs when moving data between platforms
+   - For cross-cloud scenarios: Consider the additional copy data costs when moving data between platforms
 
 ## Benchmark Results
 
@@ -589,57 +589,3 @@ Each component in this structure serves a specific purpose in the data pipeline:
 When working with Delta Lake tables across different environments (Databricks and BigQuery), you may encounter these common issues:
 
 **Metadata Schema Errors in BigQuery**
-
-If you encounter an error like this when reading Delta Lake tables in BigQuery:
-```
-Error while reading table: green_taxi_trips_raw, error message: Failed to find the required variable metaData.partitionColumns.list.element in the delta lake checkpoint schema.
-```
-
-Fix by running this command in Databricks:
-```sql
-ALTER TABLE <table_name> SET TBLPROPERTIES ('delta.minReaderVersion' = '3', 'delta.minWriterVersion' = '7');
-```
-
-**Missing or Deleted Files Errors**
-
-If you encounter errors about missing or deleted files after running Spark write operations in a table folder:
-
-Fix by running this command in Databricks:
-```sql
-FSCK REPAIR TABLE <table_name>;
-```
-
-### Best Practices
-
-Based on [Databricks Delta Lake best practices](https://docs.databricks.com/aws/en/delta/best-practices), here are key recommendations for working with Delta Lake:
-
-**Table Creation and Management**
-- Always use `CREATE OR REPLACE TABLE` statements rather than deleting and recreating tables
-- Use liquid clustering rather than partitioning, Z-order, or other data organization strategies to optimize data layout for data skipping
-- Compact small files into larger ones to improve read throughput using the `OPTIMIZE` command
-
-**Table Modification**
-- Avoid deleting the entire directory of a Delta table and creating a new table on the same path
-  - Deleting directories is inefficient and can take hours for large tables
-  - Directory deletion is not atomic, potentially causing inconsistent query results
-  - Instead, use `TRUNCATE TABLE` to remove all data or `OVERWRITE` mode when writing to a Delta table
-
-**Performance Optimization**
-- Use the `VACUUM` command to clean up old files after table operations
-- For Delta Lake merge operations:
-  - Reduce the search space for matches by adding partition predicates
-  - Use optimized writes with `dataFrameWriter.option("optimizeWrite", "true")`
-  - Compact small files to improve read throughput
-
-**Delta Lake vs. Parquet Differences**
-- Delta Lake automatically handles metadata refreshing, unlike Parquet which requires manual `REFRESH TABLE`
-- Delta Lake automatically tracks partitions, eliminating the need for `ALTER TABLE ADD/DROP PARTITION`
-- Delta Lake provides predicate pushdown optimization without manual configuration
-- Never manually modify Delta Lake files; use the transaction log to commit changes
-
-## Future Enhancements
-
-- **Implement Airflow Orchestration**: Automate and schedule Spark jobs and SQL transformations with Apache Airflow for improved workflow management
-- **Adopt dbt for SQL Transformations**: Leverage dbt (data build tool) for better management, testing, and documentation of SQL transformation scripts
-- **Establish CI/CD Pipeline**: Set up automated testing and deployment workflows to ensure code quality and streamline releases
-- **Conduct Cloud Provider Comparison**: Evaluate Azure against other cloud platforms (AWS, GCP) for cost-effectiveness and performance benchmarks

@@ -8,14 +8,14 @@ os.makedirs('images/comparison', exist_ok=True)
 # Cost comparison data (in USD)
 # Azure costs
 azure_storage = 1.39  # daily storage cost
-azure_network = 2.66  # data transfer cost per run
+azure_copy_data = 2.66  # data transfer cost per run (formerly network)
 azure_compute_vm = 1.88  # VM instance cost per run
 azure_compute_databricks = 11.10  # Databricks cluster cost per run
 azure_transform = 2.13  # Databricks SQL Warehouse cost per run
 
 # GCP costs
 gcp_storage = 0.67  # daily storage cost
-gcp_network = 12.98  # data egress cost per run
+gcp_copy_data = 12.98  # data egress cost per run (formerly network)
 gcp_compute_vm = 2.60  # VM instance cost per run
 gcp_compute_databricks = 14.22  # Databricks cluster cost per run
 gcp_transform = 7.84  # BigQuery transform cost per run
@@ -25,11 +25,11 @@ gcp_transform_databricks = 2.7  # Databricks SQL Warehouse cost per run
 snowflake_egress_gcp = 6.37  # egress copy from GCP cost per run
 snowflake_transform = 30.0  # transform data cost per run
 
-# Calculate total costs (including network/egress)
-azure_total_with_network = azure_storage + azure_network + azure_compute_vm + azure_compute_databricks
-gcp_total_with_network = gcp_storage + gcp_network + gcp_compute_vm + gcp_compute_databricks + gcp_transform
+# Calculate total costs (including copy data/egress)
+azure_total_with_copy_data = azure_storage + azure_copy_data + azure_compute_vm + azure_compute_databricks
+gcp_total_with_copy_data = gcp_storage + gcp_copy_data + gcp_compute_vm + gcp_compute_databricks + gcp_transform
 
-# Calculate total costs (excluding network/egress as per requirement)
+# Calculate total costs (excluding copy data/egress as per requirement)
 azure_total = azure_storage + azure_compute_vm + azure_compute_databricks
 gcp_total = gcp_storage + gcp_compute_vm + gcp_compute_databricks + gcp_transform
 
@@ -101,8 +101,8 @@ plt.close()
 plt.figure(figsize=(10, 6))
 # Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
 azure_compute_convert = azure_compute_vm + azure_compute_databricks
-azure_labels = ['Storage', 'Network', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
-azure_sizes = [azure_storage, azure_network, azure_compute_convert, azure_transform]
+azure_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
+azure_sizes = [azure_storage, azure_copy_data, azure_compute_convert, azure_transform]
 azure_colors = ['#0078D4', '#50e6ff', '#243a5e', '#0063B1']
 
 plt.pie(azure_sizes, labels=azure_labels, colors=azure_colors, 
@@ -121,8 +121,8 @@ plt.figure(figsize=(20, 8))
 plt.subplot(1, 2, 1)
 # Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
 gcp_compute_convert = gcp_compute_vm + gcp_compute_databricks
-gcp_bigquery_labels = ['Storage', 'Network Egress', 'Computing (Convert CSV to parquet)', 'BigQuery Transform']
-gcp_bigquery_sizes = [gcp_storage, gcp_network, gcp_compute_convert, gcp_transform]
+gcp_bigquery_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'BigQuery Transform']
+gcp_bigquery_sizes = [gcp_storage, gcp_copy_data, gcp_compute_convert, gcp_transform]
 gcp_bigquery_colors = ['#4285F4', '#34A853', '#FBBC05', '#5F6368']
 
 plt.pie(gcp_bigquery_sizes, labels=gcp_bigquery_labels, colors=gcp_bigquery_colors, 
@@ -135,8 +135,8 @@ plt.title('GCP Cost Breakdown with BigQuery\nTotal: $38.31/run + $0.67/day', fon
 plt.subplot(1, 2, 2)
 # Combine VM Instance and Databricks Cluster into Computing (Convert CSV to parquet)
 gcp_compute_convert = gcp_compute_vm + gcp_compute_databricks
-gcp_databricks_labels = ['Storage', 'Network Egress', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
-gcp_databricks_sizes = [gcp_storage, gcp_network, gcp_compute_convert, gcp_transform_databricks]
+gcp_databricks_labels = ['Storage', 'Copy Data', 'Computing (Convert CSV to parquet)', 'Databricks SQL Warehouse']
+gcp_databricks_sizes = [gcp_storage, gcp_copy_data, gcp_compute_convert, gcp_transform_databricks]
 gcp_databricks_colors = ['#4285F4', '#34A853', '#FBBC05', '#5F6368']  # Using same color as BigQuery Transform
 
 plt.pie(gcp_databricks_sizes, labels=gcp_databricks_labels, colors=gcp_databricks_colors, 
