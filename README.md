@@ -255,11 +255,51 @@ The project processes a massive volume of NYC Taxi data:
 
 ### Storage Container Sizes
 
-| Container | Size |
-|:---------:|:----:|
-| Bronze | 223.13GB |
-| Silver | 107.2GB |
-| Gold | 124.04GB |
+| Cloud Provider | Storage Type | Layer | Size |
+|:--------------|:-------------|:-----:|:----:|
+| **Azure** | Azure Storage V2 | Raw | 223.13 GiB |
+| | | Staging | 36.53 GiB |
+| | | Transform | 131.07 GiB |
+| | | **Total** | **390.73 GiB** |
+|||||
+| **GCP** | GCS | Raw | 223.13 GiB |
+| | | Staging | 37.08 GiB |
+| | BigQuery | Transform (Tables) | 62.04 GiB (Physical bytes) |
+| | | **Total** | **322.25 GiB** |
+|||||
+| **Snowflake (GCP)** | GCS | Raw | 223.13 GiB |
+| | | Staging | 37.08 GiB |
+| | Snowflake | Transform (Tables) | 97 GiB (Physical bytes) |
+| | | **Total** | **357.21 GiB** |
+
+#### Storage Size Visualization
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
+pie
+    title Azure Storage Distribution (GiB)
+    "Raw" : 223.13
+    "Staging" : 36.53
+    "Transform" : 131.07
+```
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
+pie
+    title GCP Storage Distribution (GiB)
+    "Raw" : 223.13
+    "Staging" : 37.08
+    "Transform" : 62.04
+```
+
+```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
+pie
+    title Snowflake (GCP) Storage Distribution (GiB)
+    "Raw" : 223.13
+    "Staging" : 37.08
+    "Transform" : 97
+```
 
 ## Performance and Cost Visualizations
 
@@ -287,7 +327,7 @@ GCP's cost structure is shown with two options: using BigQuery for transformatio
 
 ![Transform Cost Comparison](images/comparison/transform-cost-comparison.png)
 
-This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $30.00/run.
+This chart compares the transform costs across BigQuery, Databricks, and Snowflake. Databricks SQL Warehouse offers the most cost-effective solution at $2.70/run on GCP and $2.13/run on Azure, while Snowflake has the highest transform cost at $38.00/run.
 
 ### Performance Comparison Charts
 
@@ -325,10 +365,10 @@ We tracked the costs associated with running our data pipeline across both cloud
 | | **TOTAL (with BigQuery)** | | | **$38.31/run** + $0.67/day |
 | | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + $0.67/day |
 |||||
-| **Snowflake** | **Storage** | Daily Storage | Snowflake GCP | $0.128/day |
-| | **Copy Data** | Egress Copy from GCP | Snowflake | $6.37/run |
-| | **Compute** | Transform Data | Snowflake | $30.00/run |
-| | **TOTAL** | | | **$36.37/run** + $0.128/day |
+| **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | Updating |
+| | **Copy Data** | Egress Copy from GCP | Snowflake (AWS) | $6.37/run |
+| | **Compute** | Transform Data | Snowflake | $38.00/run |
+| | **TOTAL** | | | **$44.37/run** + Storage Cost Per Day |
 
 ### Key Cost Insights
 
@@ -336,25 +376,29 @@ We tracked the costs associated with running our data pipeline across both cloud
   - **Azure** offers the lowest total cost at **$19.16/run** (plus daily storage)
   - **GCP with Databricks SQL** costs **$33.17/run** (plus daily storage)
   - **GCP with BigQuery** costs **$38.31/run** (plus daily storage)
-  - **Snowflake** costs **$36.37/run**
+  - **Snowflake** costs **$44.37/run** (plus daily storage)
 
 - **Storage Cost Comparison**: 
   - Azure storage costs ($1.39/day) are approximately twice as expensive as GCP storage ($0.67/day) for similar workloads and data volumes
-  - Snowflake GCP charges $20/TB/month, with our dataset (silver + gold) taking 194.1GB resulting in a storage cost of $3.88/month (approximately $0.128/day)
+  - Snowflake GCP charges $20/TB/month, with our dataset (silver + gold) taking 97GB resulting in a storage cost of $1.94/month (approximately $0.063/day)
+  - **Time-travel feature impact**: Storage costs are affected by time-travel retention periods, which vary by platform:
+    - Azure and GCP have a default time-travel retention of 7 days
+    - Snowflake Standard has a default time-travel retention of 1 day
+    - Snowflake Enterprise has a default time-travel retention of 90 days
   
 - **Copy Data Considerations**: When ingesting data, be mindful of data copy/egress charges when moving data between different cloud vendors. These charges can be significant ($12.98/run in our GCP implementation) and should be avoided when possible by keeping data processing within a single cloud ecosystem.
 
 - **Transform Cost Comparison**: There are significant differences in transform costs across platforms:
   - Databricks SQL Warehouse is the most cost-effective option on both Azure ($2.13/run) and GCP ($2.70/run)
   - BigQuery is moderately priced at $7.84/run
-  - Snowflake is the most expensive at $30.00/run, plus additional egress costs ($6.37/run) when copying data from GCP
+  - Snowflake is the most expensive at $38.00/run, plus additional egress costs ($6.37/run) when copying data from GCP
 
 ### Key Observations
 
 1. **Cost vs. Performance Tradeoff**: 
    - **Azure** offers the **lowest overall cost** ($19.16/run) but slower performance
    - **GCP** provides **fastest processing** but at a **higher cost** ($33.17-$38.31/run)
-   - **Snowflake** has the **highest transform cost** ($30.00/run) with slowest performance transformation
+   - **Snowflake** has the **highest transform cost** ($38.00/run) with slowest performance transformation
 
 2. **Platform Selection Considerations**:
    - For cost-sensitive workloads: Databricks SQL Warehouse on Azure offers the best value
@@ -382,8 +426,10 @@ The following execution times were measured for processing the Yellow Taxi datas
 | Databricks | **GCP** | **Convert CSV to Parquet** | Bronze → Silver | 91min | Initial data ingestion and conversion |
 | | | **Transform** | Silver → Silver (transformed) | 1min 37s | Create table from transform SQL run in Cloud SQL Warehouse (BigQuery) |
 | | | **Materialize** | Silver → Gold | 1min 3s | Final materialization step in Cloud SQL Warehouse (BigQuery) |
-| Snowflake | **GCP** | **Transform** | Silver → Silver (transformed) | 26min 41s | Create table from transform SQL run in Snowflake |
+| Snowflake | **AWS(asia)** | **Transform** | Silver → Silver (transformed) | 26min 41s | Create table from transform SQL run in Snowflake |
 | | | **Materialize** | Silver → Gold | 23min 54s | Final materialization step in Snowflake |
+| Snowflake | **GCP (us-lowa)** | **Transform** | Silver → Silver (transformed) | 38min 48s | Create table from transform SQL run in Snowflake |
+| | | **Materialize** | Silver → Gold | 34min 7s | Final materialization step in Snowflake |
 
 ### 🔄 Transform Method Evolution
 
