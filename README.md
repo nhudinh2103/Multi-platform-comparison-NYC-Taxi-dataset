@@ -6,6 +6,7 @@
   - [🚀 Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
   - [📊 Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
   - [🔍 Optimize Transformation Query for Big Dataset (Yellow Taxi)](#-optimize-transformation-query-for-big-dataset-yellow-taxi)
+  - [💾 Change Delta Format File Writing Implementation](#-change-delta-format-file-writing-implementation)
 - [Architecture](#architecture)
   - [High-Level Architecture](#high-level-architecture)
   - [Data Ingestion Flow](#data-ingestion-flow)
