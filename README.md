@@ -77,6 +77,37 @@ Extended data processing from the original 2016-2017 range to include all NYC ta
 
 Added query optimization techniques (by using BROADCAST join hint and UNION ALL query approach) for better performance and ad-hoc queries on the large Yellow Taxi dataset (1.37B records)
 
+### 💾 Change Delta Format File Writing Implementation
+
+Changed the implementation when writing to delta format files to reduce storage size:
+
+**Original code:**
+```python
+taxiCanonicalDF.coalesce(4).write.format("delta").mode("append").partitionBy("trip_year","trip_month").save(destDataDirRoot) 
+```
+
+**Updated code:**
+```python
+year_month_dir = "{}trip_year={}/trip_month={:02d}".format(destDataDirRoot,j,i)
+
+old_files = dbutils.fs.ls(year_month_dir)
+taxiCanonicalDF.repartition(4) \
+               .write \
+               .option("compression", "zstd") \
+               .format("delta") \
+               .mode("overwrite") \
+               .option("replaceWhere", f"trip_year = '{j}' and trip_month = '{i:02d}'") \
+               .partitionBy("trip_year","trip_month") \
+               .save(destDataDirRoot)
+
+for f in old_files:
+  dbutils.fs.rm(f.path, False)
+```
+
+This change reduces storage size each time the pipeline runs by overwriting existing partition folders (removing old files after Spark write succeeds).
+
+For recovery purposes, this approach relies on the built-in time travel feature of cloud object storage.
+
 ## Architecture
 
 ### High-Level Architecture
