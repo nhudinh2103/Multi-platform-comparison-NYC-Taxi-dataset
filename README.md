@@ -118,10 +118,13 @@ Provides the environment for data transformation and querying for reporting and 
 
 #### Batch Ingestion
 
+#### High Level Diagram
+
 ##### Azure
 
-###### High Level Diagram
 ![Azure Batch Ingestion Flow](images/azure-batch-ingestion-flow.png)
+
+| Layer | Storage Type | Format | Purpose | Example Tables |
 |-------|-------------|--------|---------|---------------|
 | **Bronze** | Cloud Object Storage | CSV | Raw data storage | yellow_taxi_trips_raw, green_taxi_trips_raw |
 | **Silver** | Cloud Object Storage | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta) |
@@ -129,7 +132,6 @@ Provides the environment for data transformation and querying for reporting and 
 
 ##### GCP
 
-###### High Level Diagram
 ![GCP Batch Ingestion Flow](images/gcp-batch-ingestion-flow.png)
 
 ###### Storage Layer Details
@@ -257,18 +259,18 @@ The project processes a massive volume of NYC Taxi data:
 
 | Cloud Provider | Storage Type | Layer | Size |
 |:--------------|:-------------|:-----:|:----:|
-| **Azure** | Azure Storage V2 | Raw | 223.13 GiB |
-| | | Staging | 36.53 GiB |
-| | | Transform | 131.07 GiB |
+| **Azure** | Azure Storage V2 | Raw (CSV) | 223.13 GiB |
+| | | Staging (Parquet + Delta) | 36.53 GiB |
+| | | Transform (Delta) | 131.07 GiB |
 | | | **Total** | **390.73 GiB** |
 |||||
-| **GCP** | GCS | Raw | 223.13 GiB |
-| | | Staging | 37.08 GiB |
+| **GCP** | GCS | Raw (CSV) | 223.13 GiB |
+| | | Staging (Parquet + Delta) | 37.08 GiB |
 | | BigQuery | Transform (Tables) | 62.04 GiB (Physical bytes) |
 | | | **Total** | **322.25 GiB** |
 |||||
-| **Snowflake (GCP)** | GCS | Raw | 223.13 GiB |
-| | | Staging | 37.08 GiB |
+| **Snowflake (GCP)** | GCS | Raw (CSV) | 223.13 GiB |
+| | | Staging (Parquet + Delta) | 37.08 GiB |
 | | Snowflake | Transform (Tables) | 97 GiB (Physical bytes) |
 | | | **Total** | **357.21 GiB** |
 
@@ -278,27 +280,27 @@ The project processes a massive volume of NYC Taxi data:
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
     title Azure Storage Distribution (GiB)
-    "Raw" : 223.13
-    "Staging" : 36.53
-    "Transform" : 131.07
+    "Raw (CSV)" : 223.13
+    "Staging (Parquet + Delta)" : 36.53
+    "Transform (Delta)" : 131.07
 ```
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
     title GCP Storage Distribution (GiB)
-    "Raw" : 223.13
-    "Staging" : 37.08
-    "Transform" : 62.04
+    "Raw (CSV)" : 223.13
+    "Staging (Parquet + Delta)" : 37.08
+    "Transform (Tables)" : 62.04
 ```
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
     title Snowflake (GCP) Storage Distribution (GiB)
-    "Raw" : 223.13
-    "Staging" : 37.08
-    "Transform" : 97
+    "Raw (CSV)" : 223.13
+    "Staging (Parquet + Delta)" : 37.08
+    "Transform (Tables)" : 97
 ```
 
 ## Performance and Cost Visualizations
