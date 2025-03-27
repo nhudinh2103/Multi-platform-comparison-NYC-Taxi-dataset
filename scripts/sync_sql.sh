@@ -2,7 +2,7 @@
 
 # sync_sql.sh - Sync SQL files from a local folder to Databricks workspace
 # Usage: ./sync_sql.sh <source_folder> <remote_folder>
-# Example: ./sync_sql.sh Workspace/CarsProject/sql/transform /Users/me/sql/transform
+# Example: ./sync_sql.sh Workspace/NYCTaxi/sql/transform /Users/me/sql/transform
 
 set -e  # Exit immediately if a command exits with a non-zero status
 set -x  # Print commands and their arguments as they are executed
@@ -10,7 +10,7 @@ set -x  # Print commands and their arguments as they are executed
 # Check if required arguments are provided
 if [ $# -lt 2 ]; then
     echo "Usage: ./sync_sql.sh <source_folder> <remote_folder>"
-    echo "Example: ./sync_sql.sh Workspace/CarsProject/sql/transform /Users/me/sql/transform"
+    echo "Example: ./sync_sql.sh Workspace/NYCTaxi/sql/transform /Users/me/sql/transform"
     exit 1
 fi
 
@@ -151,10 +151,10 @@ EOF
     # Output the curl command for debugging
     echo "Curl command for debugging:"
     echo "curl -X POST \\"
-    echo "    -H \"Authorization: Bearer $TOKEN\" \\"
+    echo "    -H \"Authorization: Bearer \$TOKEN\" \\"
     echo "    -H \"Content-Type: application/json\" \\"
-    echo "    -d @\"$TEMP_FILE\" \\"
-    echo "    \"$WORKSPACE_URL/api/2.0/workspace/import\""
+    echo "    -d @\"\$TEMP_FILE\" \\"
+    echo "    \"\$WORKSPACE_URL/api/2.0/workspace/import\""
     
     # Import the SQL file to Databricks workspace
     echo "Importing SQL file to Databricks workspace..."

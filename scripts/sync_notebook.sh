@@ -80,7 +80,7 @@ fi
 # Convert the notebook to Databricks format
 echo "Converting notebook to Databricks format..."
 CONVERTED_FILE=$(mktemp)
-python convert_notebook.py "$LOCAL_PATH" "$CONVERTED_FILE"
+python "$(dirname "$0")/../Workspace/jupyter_to_databricks.py" "$LOCAL_PATH" "$CONVERTED_FILE"
 
 # Get base64 content of the converted notebook
 NOTEBOOK_CONTENT=$(base64 -w 0 "$CONVERTED_FILE")

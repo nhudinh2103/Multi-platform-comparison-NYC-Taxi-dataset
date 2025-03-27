@@ -1,9 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pathlib
+
+# Get the script directory and project root directory
+SCRIPT_DIR = pathlib.Path(__file__).parent.absolute()
+PROJECT_ROOT = SCRIPT_DIR.parent.absolute()
 
 # Create images directories if they don't exist
-os.makedirs('images/comparison', exist_ok=True)
+os.makedirs(os.path.join(PROJECT_ROOT, 'images/comparison'), exist_ok=True)
 
 # Cost comparison data (in USD)
 # Azure costs
@@ -96,7 +101,7 @@ plt.axis('equal')
 plt.title('Cost Comparison: Azure vs GCP with Databricks SQL', fontsize=14)
 
 plt.tight_layout()
-plt.savefig('images/comparison/cost-comparison-pie.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/cost-comparison-pie.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create detailed cost breakdown for Azure
@@ -113,7 +118,7 @@ plt.pie(azure_sizes, labels=azure_labels, colors=azure_colors,
 plt.axis('equal')
 plt.title('Azure Cost Breakdown\nTotal: $19.16/run + $1.785/day', fontsize=14)
 plt.tight_layout()
-plt.savefig('images/comparison/azure-cost-breakdown.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/azure-cost-breakdown.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create detailed cost breakdown for GCP (with two options side by side)
@@ -148,7 +153,7 @@ plt.axis('equal')
 plt.title('GCP Cost Breakdown with Databricks SQL\nTotal: $33.17/run + $0.85/day', fontsize=14)
 
 plt.tight_layout()
-plt.savefig('images/comparison/gcp-cost-breakdown.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/gcp-cost-breakdown.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create performance comparison bar chart (total time)
@@ -175,7 +180,7 @@ for i, v in enumerate([azure_total_time, gcp_total_time]):
     plt.text(i, v + (max_value * 0.03), f"{v:.2f}", ha='center', fontsize=12)
 
 plt.tight_layout()
-plt.savefig('images/comparison/performance-comparison-bar.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/performance-comparison-bar.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create detailed performance breakdown bar chart
@@ -211,7 +216,7 @@ for i, bars in enumerate([azure_bars, gcp_bars]):
                 f"{height:.2f}", ha='center', va='bottom', fontsize=10)
 
 plt.tight_layout()
-plt.savefig('images/comparison/performance-breakdown-bar.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/performance-breakdown-bar.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create a zoomed-in version for transform and materialize steps (excluding the convert step)
@@ -246,7 +251,7 @@ for i, bars in enumerate([azure_bars, gcp_bars]):
                 f"{height:.2f}", ha='center', va='bottom', fontsize=10)
 
 plt.tight_layout()
-plt.savefig('images/comparison/transform-materialize-comparison.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/transform-materialize-comparison.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
 # Create Transform Cost Comparison chart (BigQuery vs Databricks vs Snowflake)
@@ -273,7 +278,7 @@ for i, v in enumerate(transform_costs):
     plt.text(i, v + (max_value * 0.03), f"${v:.2f}", ha='center', fontsize=12)
 
 plt.tight_layout()
-plt.savefig('images/comparison/transform-cost-comparison.png', dpi=300, bbox_inches='tight')
+plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/transform-cost-comparison.png'), dpi=300, bbox_inches='tight')
 plt.close()
 
-print("All charts have been generated and saved to the 'images/comparison' directory.")
+print(f"All charts have been generated and saved to '{os.path.join(PROJECT_ROOT, 'images/comparison')}' directory.")
