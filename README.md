@@ -347,33 +347,33 @@ We tracked the costs associated with running our data pipeline across both cloud
 | Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
 |:--------------:|:-------------|:---------|:-------|:----------:|
 | **Azure** | **Storage** | Daily Storage | Azure Storage v2 | **$1.785** (**$0.255** * 7) /day |
-| | **Copy Data** | Data Transfer | Azure Data Factory | **$2.66/run** |
 | | **Compute** | Convert CSV to Parquet | VM Instance | **$1.88/run** |
 | | | | Databricks Cluster Spark Computing | **$11.10/run** |
 | | | Transform Data | Databricks SQL Warehouse | **$2.13/run** |
-| | **TOTAL** | | | **$19.16/run** + $1.785/day |
+| | **TOTAL** | | | **$15.11/run** + $1.785/day |
+| | **Copy Data** | Data Transfer | Azure Data Factory | **$2.66/run** |
 |||||
 | **GCP** | **Storage** | Daily Storage | GCS + BigQuery | **$0.85** ($0.57 + $0.28) /day |
-| | **Copy Data** | Data Egress | Storage Transfer | **$12.98/run** |
 | | **Compute** | Convert CSV to Parquet | VM Instance | **$2.60/run** |
 | | | | Databricks Cluster Spark Computing | **$14.22/run** |
 | | | Transform Data (Option 1) | BigQuery | **$7.84/run** |
 | | | Transform Data (Option 2) | Databricks SQL Warehouse | **$2.70/run** |
-| | **TOTAL (with BigQuery)** | | | **$38.31/run** + $0.85/day |
-| | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + $0.85/day |
+| | **TOTAL (with BigQuery)** | | | **$24.66/run** + $0.85/day |
+| | **TOTAL (with Databricks SQL)** | | | **$19.52/run** + $0.85/day |
+| | **Copy Data** | Data Egress | Storage Transfer | **$12.98/run** |
 |||||
 | **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | **$1.011** ($0.57 + $0.441)/day |
-| | **Copy Data** | Egress Copy from GCP | Snowflake (AWS) | **$6.37/run** |
 | | **Compute** | Transform Data | Snowflake | **$38.00/run** |
-| | **TOTAL** | | | **$44.37/run** + $1.011/day |
+| | **TOTAL** | | | **$38.00/run** + $1.011/day |
+| | **Copy Data** | Egress Copy from GCP | Snowflake (AWS) | **$6.37/run** |
 
 ### Key Cost Insights
 
-- **Total Cost Comparison**: 
-  - **Azure** offers the lowest total cost at **$19.16/run** (plus daily storage)
-  - **GCP with Databricks SQL** costs **$33.17/run** (plus daily storage)
-  - **GCP with BigQuery** costs **$38.31/run** (plus daily storage)
-  - **Snowflake** costs **$44.37/run** (plus daily storage)
+- **Total Cost Comparison (Excluding Copy Data)**: 
+  - **Azure** offers the lowest total cost at **$15.11/run** (plus daily storage)
+  - **GCP with Databricks SQL** costs **$19.52/run** (plus daily storage)
+  - **GCP with BigQuery** costs **$24.66/run** (plus daily storage)
+  - **Snowflake** costs **$38.00/run** (plus daily storage)
 
 - **Storage Cost Comparison**: 
   - GCP storage cost breakdown: GCS ($0.57/day) + BigQuery ($0.28/day) = $0.85/day
@@ -395,8 +395,8 @@ We tracked the costs associated with running our data pipeline across both cloud
 ### Key Observations
 
 1. **Cost vs. Performance Tradeoff**: 
-   - **Azure** offers the **lowest overall cost** ($19.16/run) but slower performance
-   - **GCP** provides **fastest processing** but at a **higher cost** ($33.17-$38.31/run)
+   - **Azure** offers the **lowest overall cost** ($15.11/run) but slower performance
+   - **GCP** provides **fastest processing** but at a **higher cost** ($19.52-$24.66/run)
    - **Snowflake** has the **highest transform cost** ($38.00/run) with slowest performance transformation
 
 2. **Platform Selection Considerations**:
