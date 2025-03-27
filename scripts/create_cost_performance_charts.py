@@ -78,7 +78,7 @@ plt.figure(figsize=(20, 8))
 plt.subplot(1, 2, 1)
 labels_bigquery = ['Azure', 'GCP with BigQuery']
 sizes_bigquery = [azure_total_cost, gcp_total_cost]
-colors_bigquery = ['#0078D4', '#EA4335']  # Azure blue, Google red
+colors_bigquery = ['#EA4335', '#0078D4']  # Azure red, Google blue
 explode_bigquery = (0.1, 0)  # explode Azure slice
 
 plt.pie(sizes_bigquery, explode=explode_bigquery, labels=labels_bigquery, colors=colors_bigquery, 
@@ -91,7 +91,7 @@ plt.title('Cost Comparison: Azure vs GCP with BigQuery', fontsize=14)
 plt.subplot(1, 2, 2)
 labels_databricks = ['Azure', 'GCP with Databricks SQL']
 sizes_databricks = [azure_total_cost, gcp_total_databricks_cost]
-colors_databricks = ['#0078D4', '#DB4437']  # Azure blue, Google dark red
+colors_databricks = ['#EA4335', '#0078D4']  # Azure red, Google blue
 explode_databricks = (0.1, 0)  # explode Azure slice
 
 plt.pie(sizes_databricks, explode=explode_databricks, labels=labels_databricks, colors=colors_databricks, 
@@ -163,7 +163,7 @@ x = np.arange(len(perf_labels))
 width = 0.35
 
 # Use more distinct colors for better differentiation
-bar_colors = ['#0078D4', '#EA4335']  # Azure blue, Google red
+bar_colors = ['#EA4335', '#0078D4']  # Azure red, Google blue
 bars = plt.bar(x, [azure_total_time, gcp_total_time], width, color=bar_colors)
 plt.xlabel('Cloud Provider', fontsize=14)
 plt.ylabel('Total Execution Time (Minutes)', fontsize=14)
@@ -188,13 +188,13 @@ plt.figure(figsize=(12, 9))  # Increased height for more space
 x = np.arange(3)  # 3 operations
 width = 0.35
 
-# Azure bars - using a distinct blue
+# Azure bars - using a distinct red
 azure_bars = plt.bar(x - width/2, [azure_convert_time, azure_transform_time, azure_materialize_time], 
-                    width, label='Azure', color='#0078D4')
+                    width, label='Azure', color='#EA4335')
 
-# GCP bars - using Google red for better contrast
+# GCP bars - using Google blue for better contrast
 gcp_bars = plt.bar(x + width/2, [gcp_convert_time, gcp_transform_time, gcp_materialize_time], 
-                  width, label='GCP', color='#EA4335')
+                  width, label='GCP', color='#0078D4')
 
 plt.xlabel('Processing Step', fontsize=14)
 plt.ylabel('Execution Time (Minutes)', fontsize=14)
@@ -224,13 +224,13 @@ plt.figure(figsize=(10, 7))  # Increased height for more space
 x = np.arange(2)  # 2 operations (transform and materialize)
 width = 0.35
 
-# Azure bars - using a distinct blue
+# Azure bars - using a distinct red
 azure_bars = plt.bar(x - width/2, [azure_transform_time, azure_materialize_time], 
-                    width, label='Azure', color='#0078D4')
+                    width, label='Azure', color='#EA4335')
 
-# GCP bars - using Google red for better contrast
+# GCP bars - using Google blue for better contrast
 gcp_bars = plt.bar(x + width/2, [gcp_transform_time, gcp_materialize_time], 
-                  width, label='GCP', color='#EA4335')
+                  width, label='GCP', color='#0078D4')
 
 plt.xlabel('Processing Step', fontsize=14)
 plt.ylabel('Execution Time (Minutes)', fontsize=14)
