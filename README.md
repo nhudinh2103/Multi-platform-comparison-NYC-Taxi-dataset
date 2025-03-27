@@ -206,12 +206,12 @@ This project includes utilities to synchronize notebooks and SQL files from your
 
 - Sync Jupyter notebooks to Databricks:
   ```bash
-  ./sync_notebook.sh Workspace/CarsProject/jupyter-notebook/LoadDataYellowTaxi.ipynb /Users/me/LoadDataYellowTaxi
+  ./sync_notebook.sh Workspace/NYCTaxi/jupyter-notebook/LoadDataYellowTaxi.ipynb /Users/me/LoadDataYellowTaxi
   ```
 
 - Sync SQL transformation files to Databricks:
   ```bash
-  ./sync_sql.sh Workspace/CarsProject/sql/transform /Users/me/sql/transform
+  ./sync_sql.sh Workspace/NYCTaxi/sql/transform /Users/me/sql/transform
   ```
 
 ## Dataset Statistics
@@ -274,7 +274,7 @@ The project processes a massive volume of NYC Taxi data:
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
-    title Azure Storage Distribution (GiB)
+    title Azure Storage Distribution (GiB) - $1.785/day
     "Raw" : 223.13
     "Staging" : 36.53
     "Transform" : 131.07
@@ -283,7 +283,7 @@ pie
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
-    title GCP Storage Distribution (GiB)
+    title GCP Storage Distribution (GiB) - $0.85/day
     "Raw" : 223.13
     "Staging" : 37.08
     "Transform" : 62.04
@@ -292,7 +292,7 @@ pie
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
-    title Snowflake (GCP) Storage Distribution (GiB)
+    title Snowflake (GCP) Storage Distribution (GiB) - $1.011/day
     "Raw" : 223.13
     "Staging" : 37.08
     "Transform" : 97
@@ -346,26 +346,26 @@ We tracked the costs associated with running our data pipeline across both cloud
 
 | Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
 |:--------------:|:-------------:|:---------:|:-------:|:----------:|
-| **Azure** | **Storage** | Daily Storage | Azure Data Lake | Updating |
-| | **Copy Data** | Data Transfer | Azure Data Factory | $2.66/run |
-| | **Compute** | Convert CSV to Parquet | VM Instance | $1.88/run |
-| | | | Databricks Cluster Spark Computing | $11.10/run |
-| | | Transform Data | Databricks SQL Warehouse | $2.13/run |
-| | **TOTAL** | | | **$19.16/run** + $1.39/day |
+| **Azure** | **Storage** | Daily Storage | Azure Storage v2 | **$1.785** (**$0.255** * 7) /day |
+| | **Copy Data** | Data Transfer | Azure Data Factory | **$2.66/run** |
+| | **Compute** | Convert CSV to Parquet | VM Instance | **$1.88/run** |
+| | | | Databricks Cluster Spark Computing | **$11.10/run** |
+| | | Transform Data | Databricks SQL Warehouse | **$2.13/run** |
+| | **TOTAL** | | | **$19.16/run** + **$1.785/day** |
 |||||
-| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | Updating |
-| | **Copy Data** | Data Egress | Storage Transfer | $12.98/run |
-| | **Compute** | Convert CSV to Parquet | VM Instance | $2.60/run |
-| | | | Databricks Cluster Spark Computing | $14.22/run |
-| | | Transform Data (Option 1) | BigQuery | $7.84/run |
-| | | Transform Data (Option 2) | Databricks SQL Warehouse | $2.70/run |
-| | **TOTAL (with BigQuery)** | | | **$38.31/run** + $0.67/day |
-| | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + $0.67/day |
+| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | **$0.85** (**$0.57** + **$0.28**)/day |
+| | **Copy Data** | Data Egress | Storage Transfer | **$12.98/run** |
+| | **Compute** | Convert CSV to Parquet | VM Instance | **$2.60/run** |
+| | | | Databricks Cluster Spark Computing | **$14.22/run** |
+| | | Transform Data (Option 1) | BigQuery | **$7.84/run** |
+| | | Transform Data (Option 2) | Databricks SQL Warehouse | **$2.70/run** |
+| | **TOTAL (with BigQuery)** | | | **$38.31/run** + **$0.85/day** |
+| | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + **$0.85/day** |
 |||||
-| **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | Updating |
-| | **Copy Data** | Egress Copy from GCP | Snowflake (AWS) | $6.37/run |
-| | **Compute** | Transform Data | Snowflake | $38.00/run |
-| | **TOTAL** | | | **$44.37/run** + Storage Cost Per Day |
+| **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | **$1.011** (**$0.57** + **$0.441**)/day |
+| | **Copy Data** | Egress Copy from GCP | Snowflake (AWS) | **$6.37/run** |
+| | **Compute** | Transform Data | Snowflake | **$38.00/run** |
+| | **TOTAL** | | | **$44.37/run** + **$1.011/day** |
 
 ### Key Cost Insights
 
@@ -376,8 +376,10 @@ We tracked the costs associated with running our data pipeline across both cloud
   - **Snowflake** costs **$44.37/run** (plus daily storage)
 
 - **Storage Cost Comparison**: 
-  - Azure storage costs ($1.39/day) are approximately twice as expensive as GCP storage ($0.67/day) for similar workloads and data volumes
-  - Snowflake GCP charges $20/TB/month, with our dataset (silver + gold) taking 97GB resulting in a storage cost of $1.94/month (approximately $0.063/day)
+  - GCP storage cost breakdown: GCS ($0.57/day) + BigQuery ($0.28/day) = $0.85/day
+  - **Note on time-travel features**: GCP storage and Bigquery costs include time-travel functionality (7-day retention period), preventing immediate deletion of objects even after bucket recreation. 
+  Azure storage costs we have disabled time-travel and soft-delete features, so it's should multiply by 7 for same reference.
+  - Snowflake GCP charges $20/TB/month, with our dataset (silver + gold) taking 97GB resulting in a storage cost of $1.94/month (approximately $0.063/day => $0.441 for 7-days time travel)
   - **Time-travel feature impact**: Storage costs are affected by time-travel retention periods, which vary by platform:
     - Azure and GCP have a default time-travel retention of 7 days
     - Snowflake Standard has a default time-travel retention of 1 day
@@ -435,14 +437,14 @@ We experimented with different transformation approaches before finding the opti
 | Cloud Provider | Transform Method | Execution Time | Details |
 |:--------------:|:----------------:|:--------------:|:--------|
 | **Azure** | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
-| | **Hybrid Spark** ([AzureTransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/azure/transform-data/AzureTransformDataYellowTaxiSpark.ipynb)) | >4 hours | Second approach with two phases: |
+| | **Hybrid Spark** ([AzureTransformDataYellowTaxiSpark.ipynb](Workspace/NYCTaxi/jupyter-notebook/azure/transform-data/AzureTransformDataYellowTaxiSpark.ipynb)) | >4 hours | Second approach with two phases: |
 | | | ~2.1 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
 | | | ~2.3 hours | Spark-based transformation and storage write |
 | | **Databricks SQL Datawarehouse** | **11min 28s** | Final approach running SQL transformations directly in Databricks SQL |
 | | **Cloud SQL Warehouse (Azure Synapse)** | **`N/A`** | Unable to run due to compute capacity exceed |
 |||||
 | **GCP** | **Raw Spark (Original Workshop)** | Too long to complete | Initial approach using raw Spark to process parquet files directly |
-| | **Hybrid Spark** ([GCPTransformDataYellowTaxiSpark.ipynb](Workspace/CarsProject/jupyter-notebook/gcp/transform-data/GCPTransformDataYellowTaxiSpark.ipynb)) | 3.5 hours | Second approach with two phases: |
+| | **Hybrid Spark** ([GCPTransformDataYellowTaxiSpark.ipynb](Workspace/NYCTaxi/jupyter-notebook/gcp/transform-data/GCPTransformDataYellowTaxiSpark.ipynb)) | 3.5 hours | Second approach with two phases: |
 | | | 2.4 hours | Parallel JDBC read using pickup_datetime partitioning to prevent data skew |
 | | | 1.1 hours | Spark-based transformation and storage write |
 | | **Databricks SQL Datawarehouse** | **14min 55s** | Intermediate approach using Databricks SQL |
@@ -458,7 +460,7 @@ We experimented with different transformation approaches before finding the opti
 
 ### 🚀 SQL Query Optimization Results (Azure)
 
-We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques on Azure Databricks. The benchmark query ([1-join-yellow-taxi.sql](Workspace/CarsProject/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
+We conducted performance testing on complex join operations between taxi trip data and reference tables using different optimization techniques on Azure Databricks. The benchmark query ([1-join-yellow-taxi.sql](Workspace/NYCTaxi/sql/benchmark/1-join-yellow-taxi.sql)) analyzes trip patterns and payment distributions across different NYC taxi zones.
 
 #### Optimization Techniques Tested
 
@@ -568,7 +570,7 @@ The project follows a modular structure to separate different stages of the data
     ├── 01-General/
     │   └── 2-CommonFunctions.ipynb
     │
-    └── CarsProject/
+    └── NYCTaxi/
         ├── jupyter-notebook/
         │   ├── azure/
         │   │   ├── analytics/
