@@ -345,27 +345,27 @@ The detailed breakdown shows that while both platforms have similar patterns (wi
 We tracked the costs associated with running our data pipeline across both cloud platforms:
 
 | Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
-|:--------------:|:-------------:|:---------:|:-------:|:----------:|
+|:--------------:|:-------------|:---------|:-------|:----------:|
 | **Azure** | **Storage** | Daily Storage | Azure Storage v2 | **$1.785** (**$0.255** * 7) /day |
 | | **Copy Data** | Data Transfer | Azure Data Factory | **$2.66/run** |
 | | **Compute** | Convert CSV to Parquet | VM Instance | **$1.88/run** |
 | | | | Databricks Cluster Spark Computing | **$11.10/run** |
 | | | Transform Data | Databricks SQL Warehouse | **$2.13/run** |
-| | **TOTAL** | | | **$19.16/run** + **$1.785/day** |
+| | **TOTAL** | | | **$19.16/run** + $1.785/day |
 |||||
-| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | **$0.85** (**$0.57** + **$0.28**)/day |
+| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | **$0.85** ($0.57 + $0.28) /day |
 | | **Copy Data** | Data Egress | Storage Transfer | **$12.98/run** |
 | | **Compute** | Convert CSV to Parquet | VM Instance | **$2.60/run** |
 | | | | Databricks Cluster Spark Computing | **$14.22/run** |
 | | | Transform Data (Option 1) | BigQuery | **$7.84/run** |
 | | | Transform Data (Option 2) | Databricks SQL Warehouse | **$2.70/run** |
-| | **TOTAL (with BigQuery)** | | | **$38.31/run** + **$0.85/day** |
-| | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + **$0.85/day** |
+| | **TOTAL (with BigQuery)** | | | **$38.31/run** + $0.85/day |
+| | **TOTAL (with Databricks SQL)** | | | **$33.17/run** + $0.85/day |
 |||||
-| **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | **$1.011** (**$0.57** + **$0.441**)/day |
+| **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | **$1.011** ($0.57 + $0.441)/day |
 | | **Copy Data** | Egress Copy from GCP | Snowflake (AWS) | **$6.37/run** |
 | | **Compute** | Transform Data | Snowflake | **$38.00/run** |
-| | **TOTAL** | | | **$44.37/run** + **$1.011/day** |
+| | **TOTAL** | | | **$44.37/run** + $1.011/day |
 
 ### Key Cost Insights
 
@@ -546,10 +546,10 @@ Each option offers different pricing models and performance characteristics.
 
 ### 🗄️ Storage
 
-| Cloud Provider | Storage Type | Configuration | Details |
-|:--------------:|:------------:|:-------------:|:--------|
-| **Azure** | **Azure Data Lake Storage Gen2** | Standard tier | Hierarchical namespace enabled |
-| **GCP** | **Google Cloud Storage** | Standard storage class | Non-hierarchical namespace (flatten) |
+| Cloud Provider | Storage Type | Configuration | Storage Class | Details |
+|:--------------:|:------------:|:-------------:|:-------------:|:--------|
+| **Azure** | **Azure Data Lake Storage Gen2** | Standard tier | **HOT** | Hierarchical namespace enabled |
+| **GCP** | **Google Cloud Storage** | Standard tier | **STANDARD** | Non-hierarchical namespace (flatten) |
 
 ## Project Structure
 
