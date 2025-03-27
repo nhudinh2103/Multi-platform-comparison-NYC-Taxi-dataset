@@ -273,28 +273,31 @@ The project processes a massive volume of NYC Taxi data:
 
 #### Storage Size Visualization
 
+**Azure Storage Distribution (GiB) - $1.785/day**
+
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
-    title "Azure Storage Distribution (GiB) - $1.785/day"
     "Raw" : 223.13
     "Staging" : 36.53
     "Transform" : 131.07
 ```
 
+**GCP Storage Distribution (GiB) - $0.85/day**
+
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
-    title "GCP Storage Distribution (GiB) - $0.85/day"
     "Raw" : 223.13
     "Staging" : 37.08
     "Transform" : 62.04
 ```
 
+**Snowflake (GCP) Storage Distribution (GiB) - $1.011/day**
+
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
 pie
-    title "Snowflake (GCP) Storage Distribution (GiB) - $1.011/day"
     "Raw" : 223.13
     "Staging" : 37.08
     "Transform" : 97
