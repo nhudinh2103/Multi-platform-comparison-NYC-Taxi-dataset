@@ -54,12 +54,6 @@
 
 An experimental data engineering project for processing and analyzing NYC Taxi data (1.4B+ records) across multiple platforms (Databricks, BigQuery, Snowflake) and cloud vendors (Azure, GCP) to compare performance and cost. This project extends the [Azure-Databricks-NYC-Taxi-Workshop](https://github.com/microsoft/Azure-Databricks-NYC-Taxi-Workshop) with significant performance improvements by replacing Spark transformations with cloud-native SQL data warehousing solutions, expanding the data range (2009–2017), and optimizing queries using BROADCAST hints.
 
-The project implements and benchmarks the same data pipeline across:
-- **Azure Databricks**: Using Azure Data Lake Storage and Databricks SQL Warehouse
-- **GCP Databricks**: Using Google Cloud Storage and Databricks SQL Warehouse
-- **GCP BigQuery**: Using Google Cloud Storage and BigQuery for transformations
-- **Snowflake**: Using Snowflake's data warehousing capabilities with data from GCP
-
 This multi-platform approach demonstrates cloud-agnostic data engineering patterns while leveraging each platform's native services for storage, data warehousing, and secret management. The comprehensive cost and performance analysis helps data engineers make informed decisions when selecting platforms for large-scale data processing workloads.
 
 ## Modifications from Original Workshop
