@@ -293,7 +293,7 @@ pie
     "Transform" : 62.04
 ```
 
-**Snowflake (GCP) Storage Distribution (GiB) - $1.011/day**
+**Snowflake (GCP) Storage Distribution (GiB) - $1.031/day**
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
@@ -367,7 +367,7 @@ We tracked the costs associated with running our data pipeline across both cloud
 | | **TOTAL (with Databricks SQL)** | | | **$19.52/run** + $0.69/day |
 | | **Copy Data** | Data Egress | Storage Transfer | **$12.98/run** |
 |||||
-| **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | **$1.011** ($0.57 + $0.441)/day |
+| **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | **$1.031** ($0.59 + $0.441)/day |
 | | **Compute** | Transform Data | Snowflake | **$38.00/run** |
 | | **TOTAL** | | | **$38.00/run** + $1.011/day |
 | | **Copy Data** | Egress Copy from GCP | Snowflake (AWS) | **$6.37/run** |
