@@ -273,7 +273,7 @@ The project processes a massive volume of NYC Taxi data:
 
 #### Storage Size Visualization
 
-**Azure Storage Distribution (GiB) - $1.785/day**
+**Azure Storage Distribution (GiB) - $2.03/day**
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
@@ -283,7 +283,7 @@ pie
     "Transform" : 131.07
 ```
 
-**GCP Storage Distribution (GiB) - $0.85/day**
+**GCP Storage Distribution (GiB) - $0.69/day**
 
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'pie1': '#ff9900', 'pie2': '#1155cc', 'pie3': '#38761d'}}}%%
@@ -351,20 +351,20 @@ We tracked the costs associated with running our data pipeline across both cloud
 
 | Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
 |:--------------:|:-------------|:---------|:-------|:----------:|
-| **Azure** | **Storage** | Daily Storage | Azure Storage v2 | **$1.785** (**$0.255** * 7) /day |
+| **Azure** | **Storage** | Daily Storage | Azure Storage v2 | **$2.03** (**$0.29** * 7) /day |
 | | **Compute** | Convert CSV to Parquet | VM Instance | **$1.88/run** |
 | | | | Databricks Cluster Spark Computing | **$11.10/run** |
 | | | Transform Data | Databricks SQL Warehouse | **$2.13/run** |
-| | **TOTAL** | | | **$15.11/run** + $1.785/day |
+| | **TOTAL** | | | **$15.11/run** + $2.03/day |
 | | **Copy Data** | Data Transfer | Azure Data Factory | **$2.66/run** |
 |||||
-| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | **$0.85** ($0.57 + $0.28) /day |
+| **GCP** | **Storage** | Daily Storage | GCS + BigQuery | **$0.69** ($0.59 + $0.1) /day |
 | | **Compute** | Convert CSV to Parquet | VM Instance | **$2.60/run** |
 | | | | Databricks Cluster Spark Computing | **$14.22/run** |
 | | | Transform Data (Option 1) | BigQuery | **$7.84/run** |
 | | | Transform Data (Option 2) | Databricks SQL Warehouse | **$2.70/run** |
-| | **TOTAL (with BigQuery)** | | | **$24.66/run** + $0.85/day |
-| | **TOTAL (with Databricks SQL)** | | | **$19.52/run** + $0.85/day |
+| | **TOTAL (with BigQuery)** | | | **$24.66/run** + $0.69/day |
+| | **TOTAL (with Databricks SQL)** | | | **$19.52/run** + $0.69/day |
 | | **Copy Data** | Data Egress | Storage Transfer | **$12.98/run** |
 |||||
 | **Snowflake** | **Storage** | Daily Storage | GCS + Snowflake | **$1.011** ($0.57 + $0.441)/day |

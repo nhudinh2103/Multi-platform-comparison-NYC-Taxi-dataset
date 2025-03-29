@@ -12,14 +12,14 @@ os.makedirs(os.path.join(PROJECT_ROOT, 'images/comparison'), exist_ok=True)
 
 # Cost comparison data (in USD)
 # Azure costs
-azure_storage_cost = 1.785  # daily storage cost (0.255 * 7 for 7-day time travel)
+azure_storage_cost = 2.03  # daily storage cost (0.29 * 7 for 7-day time travel)
 azure_copy_data_cost = 2.66  # data transfer cost per run (formerly network)
 azure_compute_vm_cost = 1.88  # VM instance cost per run
 azure_compute_databricks_cost = 11.10  # Databricks cluster cost per run
 azure_transform_cost = 2.13  # Databricks SQL Warehouse cost per run
 
 # GCP costs
-gcp_storage_cost = 0.85  # daily storage cost (0.57 + 0.28)
+gcp_storage_cost = 0.69  # daily storage cost (0.59 + 0.1)
 gcp_copy_data_cost = 12.98  # data egress cost per run (formerly network)
 gcp_compute_vm_cost = 2.60  # VM instance cost per run
 gcp_compute_databricks_cost = 14.22  # Databricks cluster cost per run
@@ -116,7 +116,7 @@ plt.pie(azure_sizes, labels=azure_labels, colors=azure_colors,
         autopct=make_autopct(azure_sizes),
         shadow=True, startangle=140, textprops={'fontsize': 14})
 plt.axis('equal')
-plt.title('Azure Cost Breakdown\nTotal: $19.16/run + $1.785/day', fontsize=14)
+plt.title('Azure Cost Breakdown\nTotal: $19.16/run + $2.03/day', fontsize=14)
 plt.tight_layout()
 plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/azure-cost-breakdown.png'), dpi=300, bbox_inches='tight')
 plt.close()
@@ -136,7 +136,7 @@ plt.pie(gcp_bigquery_sizes, labels=gcp_bigquery_labels, colors=gcp_bigquery_colo
         autopct=make_autopct(gcp_bigquery_sizes),
         shadow=True, startangle=140, textprops={'fontsize': 12})
 plt.axis('equal')
-plt.title('GCP Cost Breakdown with BigQuery\nTotal: $38.31/run + $0.85/day', fontsize=14)
+plt.title('GCP Cost Breakdown with BigQuery\nTotal: $38.31/run + $0.69/day', fontsize=14)
 
 # Second subplot - GCP with Databricks SQL Warehouse
 plt.subplot(1, 2, 2)
@@ -150,7 +150,7 @@ plt.pie(gcp_databricks_sizes, labels=gcp_databricks_labels, colors=gcp_databrick
         autopct=make_autopct(gcp_databricks_sizes),
         shadow=True, startangle=140, textprops={'fontsize': 12})
 plt.axis('equal')
-plt.title('GCP Cost Breakdown with Databricks SQL\nTotal: $33.17/run + $0.85/day', fontsize=14)
+plt.title('GCP Cost Breakdown with Databricks SQL\nTotal: $33.17/run + $0.69/day', fontsize=14)
 
 plt.tight_layout()
 plt.savefig(os.path.join(PROJECT_ROOT, 'images/comparison/gcp-cost-breakdown.png'), dpi=300, bbox_inches='tight')
