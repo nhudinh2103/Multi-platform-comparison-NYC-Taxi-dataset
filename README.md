@@ -6,7 +6,6 @@
   - [🚀 Replaced Transformation by Spark with Cloud SQL Data Warehouse](#-replaced-transformation-by-spark-with-cloud-sql-data-warehouse)
   - [📊 Expanded Data Range for Better Benchmarking](#-expanded-data-range-for-better-benchmarking)
   - [🔍 Optimize Transformation Query for Big Dataset (Yellow Taxi)](#-optimize-transformation-query-for-big-dataset-yellow-taxi)
-  - [💾 Change Delta Format File Writing Implementation](#-change-delta-format-file-writing-implementation)
 - [Architecture](#architecture)
   - [High-Level Architecture](#high-level-architecture)
   - [Data Ingestion Flow](#data-ingestion-flow)
@@ -347,6 +346,10 @@ The detailed breakdown shows that while both platforms have similar patterns (wi
 
 ## Cost Analysis
 
+**Object Storage Configuration:**
+- **Region:** Single region - Southeast Asia (Azure) and asia-southeast1 (GCP)
+- **Soft-delete:** Disabled for all benchmarks. Note: enabling this feature causes objects to remain (and incur charges) during the retention period, complicating benchmark accuracy.
+
 We tracked the costs associated with running our data pipeline across both cloud platforms:
 
 | Cloud Provider | Resource Type | Operation | Service | Cost (USD) |
@@ -381,14 +384,14 @@ We tracked the costs associated with running our data pipeline across both cloud
   - **Snowflake** costs **$38.00/run** (plus daily storage)
 
 - **Storage Cost Comparison**: 
-  - GCP storage cost breakdown: GCS ($0.57/day) + BigQuery ($0.28/day) = $0.85/day
-  - **Note on time-travel features**: GCP storage and Bigquery costs include time-travel functionality (7-day retention period), preventing immediate deletion of objects even after bucket recreation. 
-  Azure storage costs we have disabled time-travel and soft-delete features, so it's should multiply by 7 for same reference.
-  - Snowflake GCP charges $20/TB/month, with our dataset (silver + gold) taking 97GB resulting in a storage cost of $1.94/month (approximately $0.063/day => $0.441 for 7-days time travel)
-  - **Time-travel feature impact**: Storage costs are affected by time-travel retention periods, which vary by platform:
-    - Azure and GCP have a default time-travel retention of 7 days
+  - GCP storage cost breakdown: GCS ($0.59/day) + BigQuery ($0.10/day) = $0.69/day
+  - **Storage Retention Policies**: Cloud storage costs are affected by retention periods for both time-travel and soft-delete features:
+    - Google Cloud Storage soft-delete objects are only removed after the configured retention period (default 7 days)
+    - BigQuery has time-travel functionality with a 7-day retention period
+    - Azure Storage has the same soft-delete functionality with a default 7-day retention period
     - Snowflake Standard has a default time-travel retention of 1 day
     - Snowflake Enterprise has a default time-travel retention of 90 days
+    - Snowflake GCP charges $20/TB/month, with our dataset (silver + gold) taking 97GB resulting in a storage cost of $1.94/month (approximately $0.063/day => $0.441 for 7-days time travel)
   
 - **Copy Data Considerations**: When ingesting data, be mindful of data copy/egress charges when moving data between different cloud vendors. These charges can be significant ($12.98/run in our GCP implementation) and should be avoided when possible by keeping data processing within a single cloud ecosystem.
 
@@ -737,3 +740,4 @@ Choose between these options based on your specific needs and requirements. Delt
 - **Adopt dbt for SQL Transformations**: Leverage dbt (data build tool) for better management, testing, and documentation of SQL transformation scripts
 - **Establish CI/CD Pipeline**: Set up automated testing and deployment workflows to ensure code quality and streamline releases
 - **Conduct Cloud Provider Comparison**: Evaluate Azure against other cloud platforms (AWS, GCP) for cost-effectiveness and performance benchmarks
+- **Benchmark Streaming Solutions**: Compare Kafka Connect, Apache Flink, and Spark Streaming for real-time data ingestion performance and cost
