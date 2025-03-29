@@ -12,6 +12,7 @@
     - [Batch Ingestion](#batch-ingestion)
       - [Azure](#azure)
       - [GCP](#gcp)
+  - [Storage Layer Details](#storage-layer-details)
 - [Setup](#setup)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
@@ -22,6 +23,7 @@
   - [Reference Data](#reference-data)
   - [Data Growth by Year](#data-growth-by-year)
   - [Storage Container Sizes](#storage-container-sizes)
+    - [Storage Size Visualization](#storage-size-visualization)
 - [Performance and Cost Visualizations](#performance-and-cost-visualizations)
   - [Cost Comparison Charts](#cost-comparison-charts)
     - [Overall Cost Comparison (Excluding Copy Data Costs)](#overall-cost-comparison-excluding-copy-data-costs)
@@ -33,6 +35,9 @@
 - [Cost Analysis](#cost-analysis)
   - [Key Cost Insights](#key-cost-insights)
   - [Key Observations](#key-observations)
+- [Platform Selection Guide](#platform-selection-guide)
+  - [Cost-Optimized Solutions](#cost-optimized-solutions)
+  - [Performance-Optimized Solutions](#performance-optimized-solutions)
 - [Benchmark Results](#benchmark-results)
   - [Key Findings](#key-findings)
   - [🕒 Data Pipeline Execution Times (Yellow Taxi)](#-data-pipeline-execution-times-yellow-taxi)
@@ -41,6 +46,8 @@
 - [Resources](#resources)
   - [💻 Computing Resources](#-computing-resources)
     - [Databricks](#databricks)
+    - [SQL Warehouse](#sql-warehouse)
+    - [Provision notes for cost optimizing](#provision-notes-for-cost-optimizing)
     - [Snowflake](#snowflake)
   - [🗄️ Storage](#️-storage)
 - [Project Structure](#project-structure)
@@ -75,48 +82,43 @@ Added query optimization techniques (by using BROADCAST join hint and UNION ALL 
 
 ## Architecture
 
+## Batch Ingestion
+
 ### High-Level Architecture
 
 ![Overall Architecture](images/overall-architecture.png)
 
 The architecture consists of several key components that are implemented differently across cloud providers:
 
-#### Common Components
-
-**Data Synchronization**  
+#### **Data Synchronization**  
 Copies data from NYC source into cloud storage (stored as CSV)
 - Azure: **Azure Data Factory**
 - GCP: **Storage Transfer Service**
 
-**Data Ingestion (Apache Spark)**  
+#### **Data Ingestion (Apache Spark)**  
 Apache Spark on Databricks processes raw CSV data into optimized formats for analytics:
 - Converts CSV to Parquet (reference data) and Delta Lake (trip data)
 - Handles schema evolution and data partitioning
 - Provides distributed processing for large-scale data transformation
 - Enables efficient data processing with in-memory computation
 
-**Secret Management**  
+#### **Secret Management**  
 Stores sensitive information like secrets and credentials for connecting to Databricks and cloud services
 - Azure: **Azure Key Vault**
 - GCP: **Databricks secrets**
 
-**Storage**  
+#### **Storage**  
 Serves as the primary storage layer where we implement the medallion architecture (Bronze, Silver, Gold layers)
 - Azure: **Azure Data Lake Storage Gen2**
 - GCP: **Google Cloud Storage (GCS)**
 
-**Cloud Data Warehouse**  
+#### **Cloud Data Warehouse**  
 Provides the environment for data transformation and querying for reporting and analytics
 - Azure: **Azure Synapse**
 - GCP: **Google BigQuery**
 
-### Data Ingestion Flow
-
-#### Batch Ingestion
-
-#### High Level Diagram
-
-##### Azure
+### Ingestion Flow
+#### Azure
 
 ![Azure Batch Ingestion Flow](images/azure-batch-ingestion-flow.png)
 
@@ -126,11 +128,11 @@ Provides the environment for data transformation and querying for reporting and 
 | **Silver** | Cloud Object Storage | Parquet/Delta | Processed data | taxi_zone_lookup (Parquet), yellow_taxi_trips_transform (Delta) |
 | **Gold** | Cloud Object Storage | Delta Lake | Analytics-ready data | taxi_trips_mat_view |
 
-##### GCP
+#### GCP
 
 ![GCP Batch Ingestion Flow](images/gcp-batch-ingestion-flow.png)
 
-###### Storage Layer Details
+### Storage Layer Details
 
 | Layer | Storage Type | Format | Purpose | Example Tables |
 |-------|-------------|--------|---------|---------------|
@@ -407,10 +409,29 @@ We tracked the costs associated with running our data pipeline across both cloud
    - **GCP** provides **fastest processing** but at a **higher cost** ($19.52-$24.66/run)
    - **Snowflake** has the **highest transform cost** ($38.00/run) with slowest performance transformation
 
-2. **Platform Selection Considerations**:
-   - For cost-sensitive workloads: Databricks SQL Warehouse on Azure offers the best value
-   - For performance-critical workloads: BigQuery on GCP provides the fastest processing
-   - For cross-cloud scenarios: Consider the additional copy data costs when moving data between platforms
+## Platform Selection Guide
+
+### Batch Ingestion
+
+This guide helps you choose the most appropriate platform based on your specific requirements and priorities.
+
+#### Cost-Optimized Solutions
+
+If your primary concern is minimizing costs while maintaining acceptable performance:
+
+| Recommendation | Details |
+|:--------------|:--------|
+| **Azure Databricks SQL Warehouse** | Lowest overall cost with acceptable performance for most workloads |
+| **GCP with Databricks SQL** | Moderate cost with better performance than Azure |
+
+#### Performance-Optimized Solutions
+
+When processing speed is critical and budget constraints are secondary:
+
+| Recommendation | Details |
+|:--------------|:--------|
+| **GCP BigQuery** | Fastest transformation times, especially for complex queries |
+| **GCP with Databricks SQL** | Good balance of speed and cost efficiency |
 
 ## Benchmark Results
 
@@ -703,9 +724,6 @@ Delta Lake provides powerful schema management capabilities that standard Parque
 These features make Delta Lake particularly valuable for long-running data pipelines where data schemas may evolve over time, and data quality is critical.
 
 ### Storage Optimization
-
-#### Choosing built-in cloud object storage or using delta lake
-
 When designing your data storage strategy, you have two main options to consider:
 
 - **Option 1: Standard Parquet with Cloud Storage Features**
